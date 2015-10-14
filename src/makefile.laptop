@@ -10,11 +10,10 @@ LIBPATH2 =   /usr/lib/x86_64-linux-gnu/
 FFLAGS   =   -O2 -m64 -mcmodel=medium -fconvert=little-endian -frecord-marker=4 -I$(INCPATH)
 #FFLAGS   =   -O2 -mcmodel=medium -fconvert=little-endian -frecord-marker=4 -I$(INCPATH)
 
-#options for Lion
-#libs_dir=/Users/ignacio_in_EBCRPA/flexpart/libs/
+#options for Lion/Mavericks/Yosemite``
 libs_dir=/Users/ignacio/flexpart/libs/
-INCPATH  = $(libs_dir)/grib_api-1.12.3_dir/include
-LIBPATH1 = $(libs_dir)/grib_api-1.12.3_dir/lib
+INCPATH  = $(libs_dir)/grib_api-1.13.1_dir_gfortran_5.1/include
+LIBPATH1 = $(libs_dir)/grib_api-1.13.1_dir_gfortran_5.1/lib
 LIBPATH2 = $(libs_dir)/jasper_dir/lib
 
 LDFLAGS  = $(FFLAGS) -L$(LIBPATH2) -L$(LIBPATH1) -lgrib_api_f90 -lgrib_api -lm -ljasper
