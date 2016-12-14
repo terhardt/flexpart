@@ -45,6 +45,8 @@ MODULE fpmetbinary_mod
     USE conv_mod
     USE par_mod, ONLY : nxmax, nymax, nzmax, nuvzmax, nwzmax
 
+    USE netcdf
+
     IMPLICIT NONE
 
     ! Users may want to change these IO Unit values if they conflict with other parts
@@ -89,10 +91,29 @@ CONTAINS
 
         INTEGER millisecs_start, millisecs_stop, count_rate, count_max
 
+        INTEGER ncretval, ncid
+
         CALL SYSTEM_CLOCK(millisecs_start, count_rate, count_max)
+
+        ! Create and open NC4 file for writing
+        PRINT *, 'Opening NC4 file...'
+        ncretval = nf90_create(filename // ".nc4", &
+&                              OR(NF90_CLOBBER, NF90_HDF5), &
+&                              ncid)
+
         OPEN(IOUNIT_DUMP, file=filename, action='WRITE', status='REPLACE', form="unformatted", access="stream")
+
+
+
+
+
+
         CALL fpio(IOUNIT_DUMP, 'DUMP', cm_index)
         CLOSE(IOUNIT_DUMP)
+
+        PRINT *, 'Closing NC4 file...'
+        ncretval = nf90_close(ncid)
+
         CALL SYSTEM_CLOCK(millisecs_stop, count_rate, count_max)
 
         !PRINT *, 'Dump walltime secs: ', (millisecs_stop-millisecs_start)/1000.0
