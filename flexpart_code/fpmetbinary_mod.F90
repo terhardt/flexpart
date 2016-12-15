@@ -91,7 +91,7 @@ CONTAINS
 
         INTEGER millisecs_start, millisecs_stop, count_rate, count_max
 
-        INTEGER ncretval, ncid
+        INTEGER :: ncretval, ncid          ! NetCDF func return value, file id
 
         CALL SYSTEM_CLOCK(millisecs_start, count_rate, count_max)
 
@@ -108,7 +108,7 @@ CONTAINS
 
 
 
-        CALL fpio(IOUNIT_DUMP, 'DUMP', cm_index)
+        CALL fpio(IOUNIT_DUMP, ncid, 'DUMP', cm_index)
         CLOSE(IOUNIT_DUMP)
 
         PRINT *, 'Closing NC4 file...'
@@ -125,11 +125,19 @@ CONTAINS
                                                   ! most com_mod variables.
                                                   ! Should be 1 or 2 
 
+        INTEGER :: ncretval, ncid          ! NetCDF func return value, file id
+
         INTEGER millisecs_start, millisecs_stop, count_rate, count_max
 
         CALL SYSTEM_CLOCK(millisecs_start, count_rate, count_max)
+
+        print *, "Opening nc file for reading"
+        ncretval = nf90_open(filename // ".nc4", NF90_NOWRITE, ncid)
+
+
+
         OPEN(IOUNIT_LOAD, file=filename, action='READ', status='OLD', form="unformatted", access="stream")
-        CALL fpio(IOUNIT_LOAD, 'LOAD', cm_index)
+        CALL fpio(IOUNIT_LOAD, ncid, 'LOAD', cm_index)
         CLOSE(IOUNIT_LOAD)
         CALL SYSTEM_CLOCK(millisecs_stop, count_rate, count_max)
         !PRINT *, 'Load walltime secs: ', (millisecs_stop-millisecs_start)/1000.0
@@ -282,13 +290,22 @@ CONTAINS
 
     END SUBROUTINE fpmetbinary_zero
 
-    SUBROUTINE fpio(iounit, op, cm_index)
+    SUBROUTINE fpio(iounit, ncid, op, cm_index)
         IMPLICIT NONE
+        INTEGER, INTENT(IN) :: ncid               ! NetCDF file id
         INTEGER, INTENT(IN) :: iounit
         CHARACTER(LEN=4), INTENT(IN) :: op        ! Operation - DUMP or LOAD
         INTEGER, INTENT(IN) :: cm_index           ! Index of last dimension in
                                                   ! most com_mod variables.
                                                   ! Should be 1 or 2 
+
+
+        INTEGER :: ncret          ! Return value from NetCDF calls
+        INTEGER :: nxmax_dimid, nymax_dimid, nzmax_dimid, nuvzmax_dimid, nwzmax_dimid
+
+        ! These are used when loading in dimensions from NC file
+        CHARACTER(LEN=NF90_MAX_NAME) :: nxmax_dimname, nymax_dimname, nzmax_dimname, &
+&                                       nuvzmax_dimname, nwzmax_dimname
 
         ! These are temporary variables, used in the LOAD option, for 
         ! comparing against the current values in FLEXPART of nxmax, nymax, ...
@@ -309,6 +326,16 @@ CONTAINS
             ! not meant to be reassigned during a LOAD, but used as "header"
             ! information to provide the structure of arrays
             WRITE (iounit) nxmax, nymax, nzmax, nuvzmax, nwzmax
+
+            ncret = nf90_def_dim(ncid, 'nxmax', nxmax, nxmax_dimid)
+            ncret = nf90_def_dim(ncid, 'nymax', nymax, nymax_dimid)
+            ncret = nf90_def_dim(ncid, 'nzmax', nzmax, nzmax_dimid)
+            ncret = nf90_def_dim(ncid, 'nuvzmax', nuvzmax, nuvzmax_dimid)
+            ncret = nf90_def_dim(ncid, 'nwzmax', nwzmax, nwzmax_dimid)
+
+
+
+
 
             ! Scalar values
             WRITE(iounit) nx, ny, nxmin1, nymin1, nxfield
@@ -472,6 +499,33 @@ CONTAINS
             ! we abort.
             READ (iounit) temp_nxmax, temp_nymax, temp_nzmax, &
 &                         temp_nuvzmax, temp_nwzmax
+
+            ! Get dimensions
+            ncret = nf90_inq_dimid(ncid, 'nxmax', nxmax_dimid)
+            ncret = nf90_inquire_dimension(ncid, nxmax_dimid, nxmax_dimname, &
+&                                                temp_nxmax)
+            PRINT *, 'temp_nxmax: ', temp_nxmax
+
+            ncret = nf90_inq_dimid(ncid, 'nymax', nymax_dimid)
+            ncret = nf90_inquire_dimension(ncid, nymax_dimid, nymax_dimname, &
+&                                                temp_nymax)
+            PRINT *, 'temp_nymax: ', temp_nymax
+
+            ncret = nf90_inq_dimid(ncid, 'nzmax', nzmax_dimid)
+            ncret = nf90_inquire_dimension(ncid, nzmax_dimid, nzmax_dimname, &
+&                                                temp_nzmax)
+            PRINT *, 'temp_nzmax: ', temp_nzmax
+
+            ncret = nf90_inq_dimid(ncid, 'nuvzmax', nuvzmax_dimid)
+            ncret = nf90_inquire_dimension(ncid, nuvzmax_dimid, nuvzmax_dimname, &
+&                                                temp_nuvzmax)
+            PRINT *, 'temp_nuvzmax: ', temp_nuvzmax
+
+            ncret = nf90_inq_dimid(ncid, 'nwzmax', nwzmax_dimid)
+            ncret = nf90_inquire_dimension(ncid, nwzmax_dimid, nwzmax_dimname, &
+&                                                temp_nwzmax)
+            PRINT *, 'temp_nwzmax: ', temp_nwzmax
+
 
 
             IF ( (temp_nxmax == nxmax) .AND. (temp_nymax == nymax) .AND. &
