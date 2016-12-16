@@ -538,8 +538,8 @@ CONTAINS
             ncret = nf90_put_var(ncid, ncvarid, &
 &                                pplev(0:nxmax-1, 0:nymax-1, 1:nuvzmax, cm_index))
 
-
-
+            PRINT *, 'SUM(tt(0:nxmax-1, 0:nymax-1, 1:nzmax, cm_index)): ', &
+&                                        SUM(tt(0:nxmax-1,0:nymax-1,1:nzmax, cm_index))
 
 
             ! 2d fields
@@ -828,7 +828,7 @@ CONTAINS
             ncret = nf90_get_var(ncid, ncvarid, ww)
 
             ncret = nf90_inq_varid(ncid, 'tt', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, tt)
+            ncret = nf90_get_var(ncid, ncvarid, tt(0:nxmax-1,0:nzmax-1,1:nzmax,cm_index))
 
             ncret = nf90_inq_varid(ncid, 'qv', ncvarid)
             ncret = nf90_get_var(ncid, ncvarid, qv)
@@ -851,8 +851,8 @@ CONTAINS
             ncret = nf90_inq_varid(ncid, 'pplev', ncvarid)
             ncret = nf90_get_var(ncid, ncvarid, pplev)
 
-
-
+            PRINT *, 'SUM(tt(0:nxmax-1, 0:nymax-1, 1:nzmax, cm_index)): ', &
+&                                        SUM(tt(0:nxmax-1,0:nymax-1,1:nzmax, cm_index))
 
 
 
