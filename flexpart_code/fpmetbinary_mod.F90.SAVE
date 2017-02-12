@@ -43,9 +43,7 @@ MODULE fpmetbinary_mod
 
     USE com_mod
     USE conv_mod
-    USE par_mod, ONLY : nxmax, nymax, nzmax, nuvzmax, nwzmax, numclass
-
-    USE netcdf
+    USE par_mod, ONLY : nxmax, nymax, nzmax, nuvzmax, nwzmax
 
     IMPLICIT NONE
 
@@ -91,29 +89,10 @@ CONTAINS
 
         INTEGER millisecs_start, millisecs_stop, count_rate, count_max
 
-        INTEGER :: ncretval, ncid          ! NetCDF func return value, file id
-
         CALL SYSTEM_CLOCK(millisecs_start, count_rate, count_max)
-
-        ! Create and open NC4 file for writing
-        PRINT *, 'Opening NC4 file...'
-        ncretval = nf90_create(filename // ".nc4", &
-&                              OR(NF90_CLOBBER, NF90_HDF5), &
-&                              ncid)
-
         OPEN(IOUNIT_DUMP, file=filename, action='WRITE', status='REPLACE', form="unformatted", access="stream")
-
-
-
-
-
-
-        CALL fpio(IOUNIT_DUMP, ncid, 'DUMP', cm_index)
+        CALL fpio(IOUNIT_DUMP, 'DUMP', cm_index)
         CLOSE(IOUNIT_DUMP)
-
-        PRINT *, 'Closing NC4 file...'
-        ncretval = nf90_close(ncid)
-
         CALL SYSTEM_CLOCK(millisecs_stop, count_rate, count_max)
 
         !PRINT *, 'Dump walltime secs: ', (millisecs_stop-millisecs_start)/1000.0
@@ -125,19 +104,11 @@ CONTAINS
                                                   ! most com_mod variables.
                                                   ! Should be 1 or 2 
 
-        INTEGER :: ncretval, ncid          ! NetCDF func return value, file id
-
         INTEGER millisecs_start, millisecs_stop, count_rate, count_max
 
         CALL SYSTEM_CLOCK(millisecs_start, count_rate, count_max)
-
-        print *, "Opening nc file for reading"
-        ncretval = nf90_open(filename // ".nc4", NF90_NOWRITE, ncid)
-
-
-
         OPEN(IOUNIT_LOAD, file=filename, action='READ', status='OLD', form="unformatted", access="stream")
-        CALL fpio(IOUNIT_LOAD, ncid, 'LOAD', cm_index)
+        CALL fpio(IOUNIT_LOAD, 'LOAD', cm_index)
         CLOSE(IOUNIT_LOAD)
         CALL SYSTEM_CLOCK(millisecs_stop, count_rate, count_max)
         !PRINT *, 'Load walltime secs: ', (millisecs_stop-millisecs_start)/1000.0
@@ -290,28 +261,13 @@ CONTAINS
 
     END SUBROUTINE fpmetbinary_zero
 
-    SUBROUTINE fpio(iounit, ncid, op, cm_index)
+    SUBROUTINE fpio(iounit, op, cm_index)
         IMPLICIT NONE
-        INTEGER, INTENT(IN) :: ncid               ! NetCDF file id
         INTEGER, INTENT(IN) :: iounit
         CHARACTER(LEN=4), INTENT(IN) :: op        ! Operation - DUMP or LOAD
         INTEGER, INTENT(IN) :: cm_index           ! Index of last dimension in
                                                   ! most com_mod variables.
                                                   ! Should be 1 or 2 
-
-
-        INTEGER :: ncret          ! Return value from NetCDF calls
-        INTEGER :: ncvarid          ! NetCDF variable ID
-
-        INTEGER :: nxmax_dimid, nymax_dimid, nzmax_dimid, nuvzmax_dimid, nwzmax_dimid
-
-        INTEGER, DIMENSION(1) :: dim1dids    ! Dimension IDs for 1D arrays
-        INTEGER, DIMENSION(2) :: dim2dids    ! Dimension IDs for 2D arrays
-        INTEGER, DIMENSION(3) :: dim3dids    ! Dimension IDs for 3D arrays
-
-        ! These are used when loading in dimensions from NC file
-        CHARACTER(LEN=NF90_MAX_NAME) :: nxmax_dimname, nymax_dimname, nzmax_dimname, &
-&                                       nuvzmax_dimname, nwzmax_dimname
 
         ! These are temporary variables, used in the LOAD option, for 
         ! comparing against the current values in FLEXPART of nxmax, nymax, ...
@@ -321,8 +277,6 @@ CONTAINS
         CHARACTER(LEN=12) :: temp_preproc_format_version_str
 
         CHARACTER(LEN=128) :: errmesg
-
-        INTEGER, PARAMETER :: DEF_LEVEL = 9
 
         if (op == 'DUMP') THEN
 
@@ -335,124 +289,13 @@ CONTAINS
             ! information to provide the structure of arrays
             WRITE (iounit) nxmax, nymax, nzmax, nuvzmax, nwzmax
 
-            ncret = nf90_def_dim(ncid, 'nxmax', nxmax, nxmax_dimid)
-            ncret = nf90_def_dim(ncid, 'nymax', nymax, nymax_dimid)
-            ncret = nf90_def_dim(ncid, 'nzmax', nzmax, nzmax_dimid)
-            ncret = nf90_def_dim(ncid, 'nuvzmax', nuvzmax, nuvzmax_dimid)
-            ncret = nf90_def_dim(ncid, 'nwzmax', nwzmax, nwzmax_dimid)
-
-
-
             ! Scalar values
             WRITE(iounit) nx, ny, nxmin1, nymin1, nxfield
             WRITE(iounit) nuvz, nwz, nz, nmixz, nlev_ec
             WRITE(iounit) dx, dy, xlon0, ylat0, dxconst, dyconst
 
-            ncret = nf90_def_var(ncid, 'nx', NF90_INT, ncvarid)
-            ncret = nf90_put_var(ncid, ncvarid, nx)
-
-            ncret = nf90_def_var(ncid, 'ny', NF90_INT, ncvarid)
-            ncret = nf90_put_var(ncid, ncvarid, ny)
-
-            ncret = nf90_def_var(ncid, 'nxmin1', NF90_INT, ncvarid)
-            ncret = nf90_put_var(ncid, ncvarid, nxmin1)
-
-            ncret = nf90_def_var(ncid, 'nymin1', NF90_INT, ncvarid)
-            ncret = nf90_put_var(ncid, ncvarid, nymin1)
-
-            ncret = nf90_def_var(ncid, 'nxfield', NF90_INT, ncvarid)
-            ncret = nf90_put_var(ncid, ncvarid, nxfield)
-
-            ncret = nf90_def_var(ncid, 'nuvz', NF90_INT, ncvarid)
-            ncret = nf90_put_var(ncid, ncvarid, nuvz)
-
-            ncret = nf90_def_var(ncid, 'nwz', NF90_INT, ncvarid)
-            ncret = nf90_put_var(ncid, ncvarid, nwz)
-
-            ncret = nf90_def_var(ncid, 'nz', NF90_INT, ncvarid)
-            ncret = nf90_put_var(ncid, ncvarid, nz)
-
-            ncret = nf90_def_var(ncid, 'nmixz', NF90_INT, ncvarid)
-            ncret = nf90_put_var(ncid, ncvarid, nmixz)
-
-            ncret = nf90_def_var(ncid, 'nlev_', NF90_INT, ncvarid)
-            ncret = nf90_put_var(ncid, ncvarid, nlev_ec)
-
-            ncret = nf90_def_var(ncid, 'dx', NF90_FLOAT, ncvarid)
-            ncret = nf90_put_var(ncid, ncvarid, dx)
-
-            ncret = nf90_def_var(ncid, 'dy', NF90_FLOAT, ncvarid)
-            ncret = nf90_put_var(ncid, ncvarid, dy)
-
-            ncret = nf90_def_var(ncid, 'xlon0', NF90_FLOAT, ncvarid)
-            ncret = nf90_put_var(ncid, ncvarid, xlon0)
-
-            ncret = nf90_def_var(ncid, 'ylat0', NF90_FLOAT, ncvarid)
-            ncret = nf90_put_var(ncid, ncvarid, ylat0)
-
-            ncret = nf90_def_var(ncid, 'dxconst', NF90_FLOAT, ncvarid)
-            ncret = nf90_put_var(ncid, ncvarid, dxconst)
-
-            ncret = nf90_def_var(ncid, 'dyconst', NF90_FLOAT, ncvarid)
-            ncret = nf90_put_var(ncid, ncvarid, dyconst)
-
-
-
             ! Fixed fields, static in time
             WRITE(iounit) oro, excessoro, lsm, xlanduse, height
-
-            dim2dids = (/nxmax_dimid, nymax_dimid/)
-
-            ncret = nf90_def_var(ncid, 'oro', NF90_FLOAT, &
-&                                       dim2dids, ncvarid)
-            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
-&                                        shuffle=0,     &
-&                                        deflate=1,     &
-&                                        deflate_level=DEF_LEVEL)
-            ncret = nf90_put_var(ncid, ncvarid, &
-&                                oro(0:nxmax-1, 0:nymax-1))
-
-            ncret = nf90_def_var(ncid, 'excessoro', NF90_FLOAT, &
-&                                       dim2dids, ncvarid)
-            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
-&                                        shuffle=0,     &
-&                                        deflate=1,     &
-&                                        deflate_level=DEF_LEVEL)
-            ncret = nf90_put_var(ncid, ncvarid, &
-&                                excessoro(0:nxmax-1, 0:nymax-1))
-
-            ncret = nf90_def_var(ncid, 'lsm', NF90_FLOAT, &
-&                                       dim2dids, ncvarid)
-            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
-&                                        shuffle=0,     &
-&                                        deflate=1,     &
-&                                        deflate_level=DEF_LEVEL)
-            ncret = nf90_put_var(ncid, ncvarid, &
-&                                lsm(0:nxmax-1, 0:nymax-1))
-
-            dim3dids = (/nxmax_dimid, nymax_dimid, numclass/)
-            ! numclass comes from par_mod - number of land use classes
-            ncret = nf90_def_var(ncid, 'xlanduse', NF90_FLOAT, &
-&                                       dim3dids, ncvarid)
-            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
-&                                        shuffle=0,     &
-&                                        deflate=1,     &
-&                                        deflate_level=DEF_LEVEL)
-            ncret = nf90_put_var(ncid, ncvarid, &
-&                                xlanduse(0:nxmax-1, 0:nymax-1, 1:numclass))
-
-            dim1dids = (/nzmax_dimid/)
-            ncret = nf90_def_var(ncid, 'height', NF90_FLOAT, &
-&                                       dim1dids, ncvarid)
-            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
-&                                        shuffle=0,     &
-&                                        deflate=1,     &
-&                                        deflate_level=DEF_LEVEL)
-            ncret = nf90_put_var(ncid, ncvarid, &
-&                                height(1:nzmax))
-
-
-
 
             ! 3d fields
             WRITE(iounit) uu(:,:,:,cm_index)
@@ -470,160 +313,6 @@ CONTAINS
             WRITE(iounit) pplev(:,:,:,cm_index)
             WRITE(iounit) clouds(:,:,:,cm_index)
             WRITE(iounit) cloudsh(:,:,cm_index)
-
-            dim3dids = (/nxmax_dimid, nymax_dimid, nzmax_dimid/)
-
-            ncret = nf90_def_var(ncid, 'uu', NF90_FLOAT, &
-&                                       dim3dids, ncvarid)
-            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
-&                                        shuffle=0,     &
-&                                        deflate=1,     &
-&                                        deflate_level=DEF_LEVEL)
-            ncret = nf90_put_var(ncid, ncvarid, &
-&                                uu(0:nxmax-1, 0:nymax-1, 1:nzmax, cm_index))
-
-            ncret = nf90_def_var(ncid, 'vv', NF90_FLOAT, &
-&                                       dim3dids, ncvarid)
-            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
-&                                        shuffle=0,     &
-&                                        deflate=1,     &
-&                                        deflate_level=DEF_LEVEL)
-            ncret = nf90_put_var(ncid, ncvarid, &
-&                                vv(0:nxmax-1, 0:nymax-1, 1:nzmax, cm_index))
-
-            ncret = nf90_def_var(ncid, 'uupol', NF90_FLOAT, &
-&                                       dim3dids, ncvarid)
-            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
-&                                        shuffle=0,     &
-&                                        deflate=1,     &
-&                                        deflate_level=DEF_LEVEL)
-            ncret = nf90_put_var(ncid, ncvarid, &
-&                                uupol(0:nxmax-1, 0:nymax-1, 1:nzmax, cm_index))
-
-            ncret = nf90_def_var(ncid, 'vvpol', NF90_FLOAT, &
-&                                       dim3dids, ncvarid)
-            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
-&                                        shuffle=0,     &
-&                                        deflate=1,     &
-&                                        deflate_level=DEF_LEVEL)
-            ncret = nf90_put_var(ncid, ncvarid, &
-&                                vvpol(0:nxmax-1, 0:nymax-1, 1:nzmax, cm_index))
-
-            ncret = nf90_def_var(ncid, 'ww', NF90_FLOAT, &
-&                                       dim3dids, ncvarid)
-            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
-&                                        shuffle=0,     &
-&                                        deflate=1,     &
-&                                        deflate_level=DEF_LEVEL)
-            ncret = nf90_put_var(ncid, ncvarid, &
-&                                ww(0:nxmax-1, 0:nymax-1, 1:nzmax, cm_index))
-
-            ncret = nf90_def_var(ncid, 'tt', NF90_FLOAT, &
-&                                       dim3dids, ncvarid)
-            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
-&                                        shuffle=0,     &
-&                                        deflate=1,     &
-&                                        deflate_level=DEF_LEVEL)
-            ncret = nf90_put_var(ncid, ncvarid, &
-&                                tt(0:nxmax-1, 0:nymax-1, 1:nzmax, cm_index))
-
-            ncret = nf90_def_var(ncid, 'qv', NF90_FLOAT, &
-&                                       dim3dids, ncvarid)
-            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
-&                                        shuffle=0,     &
-&                                        deflate=1,     &
-&                                        deflate_level=DEF_LEVEL)
-            ncret = nf90_put_var(ncid, ncvarid, &
-&                                qv(0:nxmax-1, 0:nymax-1, 1:nzmax, cm_index))
-
-            ncret = nf90_def_var(ncid, 'pv', NF90_FLOAT, &
-&                                       dim3dids, ncvarid)
-            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
-&                                        shuffle=0,     &
-&                                        deflate=1,     &
-&                                        deflate_level=DEF_LEVEL)
-            ncret = nf90_put_var(ncid, ncvarid, &
-&                                pv(0:nxmax-1, 0:nymax-1, 1:nzmax, cm_index))
-
-            ncret = nf90_def_var(ncid, 'rho', NF90_FLOAT, &
-&                                       dim3dids, ncvarid)
-            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
-&                                        shuffle=0,     &
-&                                        deflate=1,     &
-&                                        deflate_level=DEF_LEVEL)
-            ncret = nf90_put_var(ncid, ncvarid, &
-&                                rho(0:nxmax-1, 0:nymax-1, 1:nzmax, cm_index))
-
-            ncret = nf90_def_var(ncid, 'drhodz', NF90_FLOAT, &
-&                                       dim3dids, ncvarid)
-            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
-&                                        shuffle=0,     &
-&                                        deflate=1,     &
-&                                        deflate_level=DEF_LEVEL)
-            ncret = nf90_put_var(ncid, ncvarid, &
-&                                drhodz(0:nxmax-1, 0:nymax-1, 1:nzmax, cm_index))
-
-            ncret = nf90_def_var(ncid, 'clouds', NF90_BYTE, &
-&                                       dim3dids, ncvarid)
-            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
-&                                        shuffle=0,     &
-&                                        deflate=1,     &
-&                                        deflate_level=DEF_LEVEL)
-            ncret = nf90_put_var(ncid, ncvarid, &
-&                                clouds(0:nxmax-1, 0:nymax-1, 1:nzmax, cm_index))
-
-
-
-            ! Note the change in z dimension for the following
-            dim3dids = (/nxmax_dimid, nymax_dimid, nuvzmax_dimid/)
-
-            ncret = nf90_def_var(ncid, 'tth', NF90_FLOAT, &
-&                                       dim3dids, ncvarid)
-            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
-&                                        shuffle=0,     &
-&                                        deflate=1,     &
-&                                        deflate_level=DEF_LEVEL)
-            ncret = nf90_put_var(ncid, ncvarid, &
-&                                tth(0:nxmax-1, 0:nymax-1, 1:nuvzmax, cm_index))
-
-            ncret = nf90_def_var(ncid, 'qvh', NF90_FLOAT, &
-&                                       dim3dids, ncvarid)
-            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
-&                                        shuffle=0,     &
-&                                        deflate=1,     &
-&                                        deflate_level=DEF_LEVEL)
-            ncret = nf90_put_var(ncid, ncvarid, &
-&                                qvh(0:nxmax-1, 0:nymax-1, 1:nuvzmax, cm_index))
-
-            ncret = nf90_def_var(ncid, 'pplev', NF90_FLOAT, &
-&                                       dim3dids, ncvarid)
-            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
-&                                        shuffle=0,     &
-&                                        deflate=1,     &
-&                                        deflate_level=DEF_LEVEL)
-            ncret = nf90_put_var(ncid, ncvarid, &
-&                                pplev(0:nxmax-1, 0:nymax-1, 1:nuvzmax, cm_index))
-
-
-            dim2dids = (/nxmax_dimid, nymax_dimid/)
-            ncret = nf90_def_var(ncid, 'cloudsh', NF90_INT, &
-&                                       dim2dids, ncvarid)
-            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
-&                                        shuffle=0,     &
-&                                        deflate=1,     &
-&                                        deflate_level=DEF_LEVEL)
-            ncret = nf90_put_var(ncid, ncvarid, &
-&                                cloudsh(0:nxmax-1, 0:nymax-1, cm_index))
-
-
-
-            PRINT *, 'SUM(tt(0:nxmax-1, 0:nymax-1, 1:nzmax, cm_index)): ', &
-&                                        SUM(tt(0:nxmax-1,0:nymax-1,1:nzmax, cm_index))
-
-            PRINT *, 'SUM(clouds(0:nxmax-1, 0:nymax-1, 1:nzmax, cm_index)): ', &
-&                                        SUM(clouds(0:nxmax-1,0:nymax-1,1:nzmax, cm_index))
-
-
 
             ! 2d fields
             WRITE(iounit) ps(:,:,:,cm_index)
@@ -763,33 +452,6 @@ CONTAINS
             READ (iounit) temp_nxmax, temp_nymax, temp_nzmax, &
 &                         temp_nuvzmax, temp_nwzmax
 
-            ! Get dimensions
-            ncret = nf90_inq_dimid(ncid, 'nxmax', nxmax_dimid)
-            ncret = nf90_inquire_dimension(ncid, nxmax_dimid, nxmax_dimname, &
-&                                                temp_nxmax)
-            PRINT *, 'temp_nxmax: ', temp_nxmax
-
-            ncret = nf90_inq_dimid(ncid, 'nymax', nymax_dimid)
-            ncret = nf90_inquire_dimension(ncid, nymax_dimid, nymax_dimname, &
-&                                                temp_nymax)
-            PRINT *, 'temp_nymax: ', temp_nymax
-
-            ncret = nf90_inq_dimid(ncid, 'nzmax', nzmax_dimid)
-            ncret = nf90_inquire_dimension(ncid, nzmax_dimid, nzmax_dimname, &
-&                                                temp_nzmax)
-            PRINT *, 'temp_nzmax: ', temp_nzmax
-
-            ncret = nf90_inq_dimid(ncid, 'nuvzmax', nuvzmax_dimid)
-            ncret = nf90_inquire_dimension(ncid, nuvzmax_dimid, nuvzmax_dimname, &
-&                                                temp_nuvzmax)
-            PRINT *, 'temp_nuvzmax: ', temp_nuvzmax
-
-            ncret = nf90_inq_dimid(ncid, 'nwzmax', nwzmax_dimid)
-            ncret = nf90_inquire_dimension(ncid, nwzmax_dimid, nwzmax_dimname, &
-&                                                temp_nwzmax)
-            PRINT *, 'temp_nwzmax: ', temp_nwzmax
-
-
 
             IF ( (temp_nxmax == nxmax) .AND. (temp_nymax == nymax) .AND. &
 &                   (temp_nzmax == nzmax) .AND. &
@@ -815,82 +477,8 @@ CONTAINS
             READ(iounit) nuvz, nwz, nz, nmixz, nlev_ec
             READ(iounit) dx, dy, xlon0, ylat0, dxconst, dyconst
 
-
-
-            ! Get the varid , then read into scalar variable
-            ncret = nf90_inq_varid(ncid, 'nx', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, nx)
-
-            ncret = nf90_inq_varid(ncid, 'ny', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, ny)
-
-            ncret = nf90_inq_varid(ncid, 'nxmin1', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, nxmin1)
-
-            ncret = nf90_inq_varid(ncid, 'nymin1', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, nymin1)
-
-            ncret = nf90_inq_varid(ncid, 'nxfield', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, nxfield)
-
-            ncret = nf90_inq_varid(ncid, 'nuvz', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, nuvz)
-
-            ncret = nf90_inq_varid(ncid, 'nwz', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, nwz)
-
-            ncret = nf90_inq_varid(ncid, 'nz', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, nz)
-
-            ncret = nf90_inq_varid(ncid, 'nmixz', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, nmixz)
-
-            ncret = nf90_inq_varid(ncid, 'nlev_ec', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, nlev_ec)
-
-            ncret = nf90_inq_varid(ncid, 'dx', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, dx)
-
-            ncret = nf90_inq_varid(ncid, 'dy', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, dy)
-
-            ncret = nf90_inq_varid(ncid, 'xlon0', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, xlon0)
-
-            ncret = nf90_inq_varid(ncid, 'ylat0', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, ylat0)
-
-            ncret = nf90_inq_varid(ncid, 'dxconst', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, dxconst)
-
-            ncret = nf90_inq_varid(ncid, 'dyconst', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, dyconst)
-
-
-
-
-
-
             ! Fixed fields, static in time
             READ(iounit) oro, excessoro, lsm, xlanduse, height
-
-            ncret = nf90_inq_varid(ncid, 'oro', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, oro(0:nxmax-1,0:nymax-1))
-
-            ncret = nf90_inq_varid(ncid, 'excessoro', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, excessoro(0:nxmax-1,0:nymax-1))
-
-            ncret = nf90_inq_varid(ncid, 'lsm', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, lsm(0:nxmax-1,0:nymax-1))
-
-            ncret = nf90_inq_varid(ncid, 'xlanduse', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, xlanduse(0:nxmax-1,0:nymax-1, 1:numclass))
-
-            ncret = nf90_inq_varid(ncid, 'height', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, height(1:nzmax))
-
-
-
 
             ! 3d fields
             READ(iounit) uu(:,:,:,cm_index)
@@ -908,68 +496,6 @@ CONTAINS
             READ(iounit) pplev(:,:,:,cm_index)
             READ(iounit) clouds(:,:,:,cm_index)
             READ(iounit) cloudsh(:,:,cm_index)
-
-
-
-
-            ! Get the varid and read the variable into the array
-            ncret = nf90_inq_varid(ncid, 'uu', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, uu(0:nxmax-1,0:nymax-1,1:nzmax,cm_index))
-
-            ncret = nf90_inq_varid(ncid, 'vv', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, vv(0:nxmax-1,0:nymax-1,1:nzmax,cm_index))
-
-            ncret = nf90_inq_varid(ncid, 'uupol', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, uupol(0:nxmax-1,0:nymax-1,1:nzmax,cm_index))
-
-            ncret = nf90_inq_varid(ncid, 'vvpol', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, vvpol(0:nxmax-1,0:nymax-1,1:nzmax,cm_index))
-
-            ncret = nf90_inq_varid(ncid, 'ww', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, ww(0:nxmax-1,0:nymax-1,1:nzmax,cm_index))
-
-            ncret = nf90_inq_varid(ncid, 'tt', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, tt(0:nxmax-1,0:nymax-1,1:nzmax,cm_index))
-
-            ncret = nf90_inq_varid(ncid, 'qv', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, qv(0:nxmax-1,0:nymax-1,1:nzmax,cm_index))
-
-            ncret = nf90_inq_varid(ncid, 'pv', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, pv(0:nxmax-1,0:nymax-1,1:nzmax,cm_index))
-
-            ncret = nf90_inq_varid(ncid, 'rho', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, rho(0:nxmax-1,0:nymax-1,1:nzmax,cm_index))
-
-            ncret = nf90_inq_varid(ncid, 'drhodz', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, drhodz(0:nxmax-1,0:nymax-1,1:nzmax,cm_index))
-
-            ncret = nf90_inq_varid(ncid, 'clouds', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, clouds(0:nxmax-1,0:nzmax-1,1:nzmax,cm_index))
-
-            ncret = nf90_inq_varid(ncid, 'tth', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, tth(0:nxmax-1,0:nymax-1,1:nuvzmax,cm_index))
-
-            ncret = nf90_inq_varid(ncid, 'qvh', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, qvh(0:nxmax-1,0:nymax-1,1:nuvzmax,cm_index))
-
-            ncret = nf90_inq_varid(ncid, 'pplev', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, pplev(0:nxmax-1,0:nymax-1,1:nuvzmax,cm_index))
-
-            ncret = nf90_inq_varid(ncid, 'cloudsh', ncvarid)
-            ncret = nf90_get_var(ncid, ncvarid, cloudsh(0:nxmax-1,0:nymax-1,cm_index))
-
-
-
-
-            PRINT *, 'SUM(tt(0:nxmax-1, 0:nymax-1, 1:nzmax, cm_index)): ', &
-&                                        SUM(tt(0:nxmax-1,0:nymax-1,1:nzmax, cm_index))
-
-
-            PRINT *, 'SUM(clouds(0:nxmax-1, 0:nymax-1, 1:nzmax, cm_index)): ', &
-&                                        SUM(clouds(0:nxmax-1,0:nymax-1,1:nzmax, cm_index))
-
-
-
 
             ! 2d fields
             READ(iounit) ps(:,:,:,cm_index)
