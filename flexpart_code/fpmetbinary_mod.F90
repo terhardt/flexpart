@@ -43,7 +43,7 @@ MODULE fpmetbinary_mod
 
     USE com_mod
     USE conv_mod
-    USE par_mod, ONLY : nxmax, nymax, nzmax, nuvzmax, nwzmax, numclass
+    USE par_mod, ONLY : nxmax, nymax, nzmax, nuvzmax, nwzmax, numclass, maxspec
 
     USE netcdf
 
@@ -151,6 +151,8 @@ CONTAINS
 
         ! Zeroes out, in local datastructures, the values dumped/loaded
         ! This was written primarily as a testing mechanism.
+        ! DJM -- 17 February 2017 -- I don't think this routine has been used
+        ! for anything in recent past.  Might want to consider 86'ing it.
         ! The lines here correspond to READ and WRITE in the dump/load routines
 
         ! Scalar values
@@ -829,6 +831,16 @@ CONTAINS
 &                                        SUM(wstar(0:nxmax-1,0:nymax-1,1, cm_index))
 
 
+            dim3dids = (/nxmax_dimid, nymax_dimid, maxspec/)
+
+            ncret = nf90_def_var(ncid, 'vdep', NF90_FLOAT, &
+&                                       dim3dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                vdep(0:nxmax-1, 0:nymax-1, 1:maxspec, cm_index))
 
 
 
@@ -840,6 +852,89 @@ CONTAINS
             WRITE(iounit) bkz(:)
             WRITE(iounit) aknew(:)
             WRITE(iounit) bknew(:)
+
+            dim1dids = (/numclass/)
+
+            ncret = nf90_def_var(ncid, 'z0', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                z0(1:numclass))
+
+
+            dim1dids = (/nwzmax/)
+
+            ncret = nf90_def_var(ncid, 'akm', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                akm(1:nwzmax))
+
+            ncret = nf90_def_var(ncid, 'bkm', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                bkm(1:nwzmax))
+
+
+            dim1dids = (/nuvzmax/)
+
+            ncret = nf90_def_var(ncid, 'akz', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                akz(1:nuvzmax))
+
+            ncret = nf90_def_var(ncid, 'bkz', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                bkz(1:nuvzmax))
+
+
+            dim1dids = (/nzmax/)
+
+            ncret = nf90_def_var(ncid, 'aknew', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                aknew(1:nzmax))
+
+            ncret = nf90_def_var(ncid, 'bknew', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                bknew(1:nzmax))
+
+
+            PRINT *, 'SUM(bknew(1:nzmax)): ', &
+&                                        SUM(bknew(1:nzmax))
+
+
+
+
+
 
             ! Nested, scalar values (for each nest)
             WRITE(iounit) nxn(:)
@@ -1155,7 +1250,6 @@ CONTAINS
 
 
 
-
             ! 2d fields
             READ(iounit) ps(:,:,:,cm_index)
             READ(iounit) sd(:,:,:,cm_index)
@@ -1246,6 +1340,9 @@ CONTAINS
 &                                        SUM(wstar(0:nxmax-1,0:nymax-1,1, cm_index))
 
 
+            ncret = nf90_inq_varid(ncid, 'vdep', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, vdep(0:nxmax-1,0:nymax-1,1:maxspec, cm_index))
+
 
 
 
@@ -1258,6 +1355,36 @@ CONTAINS
             READ(iounit) bkz(:)
             READ(iounit) aknew(:)
             READ(iounit) bknew(:)
+
+
+            ncret = nf90_inq_varid(ncid, 'z0', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, z0(1:numclass))
+
+            ncret = nf90_inq_varid(ncid, 'akm', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, akm(1:nwzmax))
+
+            ncret = nf90_inq_varid(ncid, 'bkm', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, bkm(1:nwzmax))
+
+            ncret = nf90_inq_varid(ncid, 'akz', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, akz(1:nuvzmax))
+
+            ncret = nf90_inq_varid(ncid, 'bkz', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, bkz(1:nuvzmax))
+
+            ncret = nf90_inq_varid(ncid, 'aknew', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, aknew(1:nzmax))
+
+            ncret = nf90_inq_varid(ncid, 'bknew', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, bknew(1:nzmax))
+
+
+
+            PRINT *, 'SUM(bknew(1:nzmax)): ', &
+&                                        SUM(bknew(1:nzmax))
+
+
+
 
 
             ! Nested, scalar values (for each nest)
