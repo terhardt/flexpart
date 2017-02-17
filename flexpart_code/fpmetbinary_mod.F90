@@ -322,7 +322,7 @@ CONTAINS
 
         CHARACTER(LEN=128) :: errmesg
 
-        INTEGER, PARAMETER :: DEF_LEVEL = 9
+        INTEGER, PARAMETER :: DEF_LEVEL = 3
 
         if (op == 'DUMP') THEN
 
@@ -646,6 +646,191 @@ CONTAINS
             WRITE(iounit) oli(:,:,:,cm_index)
             WRITE(iounit) diffk(:,:,:,cm_index)
             WRITE(iounit) vdep(:,:,:,cm_index)
+
+            dim2dids = (/nxmax_dimid, nymax_dimid/)
+
+            ncret = nf90_def_var(ncid, 'ps', NF90_FLOAT, &
+&                                       dim2dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                ps(0:nxmax-1, 0:nymax-1, 1, cm_index))
+
+            ncret = nf90_def_var(ncid, 'sd', NF90_FLOAT, &
+&                                       dim2dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                sd(0:nxmax-1, 0:nymax-1, 1, cm_index))
+
+            ncret = nf90_def_var(ncid, 'msl', NF90_FLOAT, &
+&                                       dim2dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                msl(0:nxmax-1, 0:nymax-1, 1, cm_index))
+
+            ncret = nf90_def_var(ncid, 'tcc', NF90_FLOAT, &
+&                                       dim2dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                tcc(0:nxmax-1, 0:nymax-1, 1, cm_index))
+
+            ncret = nf90_def_var(ncid, 'u10', NF90_FLOAT, &
+&                                       dim2dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                u10(0:nxmax-1, 0:nymax-1, 1, cm_index))
+
+            ncret = nf90_def_var(ncid, 'v10', NF90_FLOAT, &
+&                                       dim2dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                v10(0:nxmax-1, 0:nymax-1, 1, cm_index))
+
+            ncret = nf90_def_var(ncid, 'tt2', NF90_FLOAT, &
+&                                       dim2dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                tt2(0:nxmax-1, 0:nymax-1, 1, cm_index))
+
+            ncret = nf90_def_var(ncid, 'td2', NF90_FLOAT, &
+&                                       dim2dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                td2(0:nxmax-1, 0:nymax-1, 1, cm_index))
+
+            ncret = nf90_def_var(ncid, 'lsprec', NF90_FLOAT, &
+&                                       dim2dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                lsprec(0:nxmax-1, 0:nymax-1, 1, cm_index))
+
+            ncret = nf90_def_var(ncid, 'convprec', NF90_FLOAT, &
+&                                       dim2dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                convprec(0:nxmax-1, 0:nymax-1, 1, cm_index))
+
+            ncret = nf90_def_var(ncid, 'sshf', NF90_FLOAT, &
+&                                       dim2dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                sshf(0:nxmax-1, 0:nymax-1, 1, cm_index))
+
+            ncret = nf90_def_var(ncid, 'ssr', NF90_FLOAT, &
+&                                       dim2dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                ssr(0:nxmax-1, 0:nymax-1, 1, cm_index))
+
+            ncret = nf90_def_var(ncid, 'surfstr', NF90_FLOAT, &
+&                                       dim2dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                surfstr(0:nxmax-1, 0:nymax-1, 1, cm_index))
+
+            ncret = nf90_def_var(ncid, 'ustar', NF90_FLOAT, &
+&                                       dim2dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                ustar(0:nxmax-1, 0:nymax-1, 1, cm_index))
+
+            ncret = nf90_def_var(ncid, 'wstar', NF90_FLOAT, &
+&                                       dim2dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                wstar(0:nxmax-1, 0:nymax-1, 1, cm_index))
+
+            ncret = nf90_def_var(ncid, 'hmix', NF90_FLOAT, &
+&                                       dim2dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                hmix(0:nxmax-1, 0:nymax-1, 1, cm_index))
+
+            ncret = nf90_def_var(ncid, 'tropopause', NF90_FLOAT, &
+&                                       dim2dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                tropopause(0:nxmax-1, 0:nymax-1, 1, cm_index))
+
+            ncret = nf90_def_var(ncid, 'oli', NF90_FLOAT, &
+&                                       dim2dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                oli(0:nxmax-1, 0:nymax-1, 1, cm_index))
+
+            ncret = nf90_def_var(ncid, 'diffk', NF90_FLOAT, &
+&                                       dim2dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                diffk(0:nxmax-1, 0:nymax-1, 1, cm_index))
+
+
+
+            PRINT *, 'SUM(ps(0:nxmax-1, 0:nymax-1, 1, cm_index)): ', &
+&                                        SUM(ps(0:nxmax-1,0:nymax-1,1, cm_index))
+
+            PRINT *, 'SUM(wstar(0:nxmax-1, 0:nymax-1, 1, cm_index)): ', &
+&                                        SUM(wstar(0:nxmax-1,0:nymax-1,1, cm_index))
+
+
+
+
 
             ! 1d fields
             WRITE(iounit) z0(:)
@@ -992,6 +1177,78 @@ CONTAINS
             READ(iounit) oli(:,:,:,cm_index)
             READ(iounit) diffk(:,:,:,cm_index)
             READ(iounit) vdep(:,:,:,cm_index)
+
+            ! Get the varid and read the variable into the array
+            ncret = nf90_inq_varid(ncid, 'ps', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, ps(0:nxmax-1,0:nymax-1,1,cm_index))
+
+            ncret = nf90_inq_varid(ncid, 'sd', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, sd(0:nxmax-1,0:nymax-1,1,cm_index))
+
+            ncret = nf90_inq_varid(ncid, 'msl', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, msl(0:nxmax-1,0:nymax-1,1,cm_index))
+
+            ncret = nf90_inq_varid(ncid, 'tcc', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, tcc(0:nxmax-1,0:nymax-1,1,cm_index))
+
+            ncret = nf90_inq_varid(ncid, 'u10', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, u10(0:nxmax-1,0:nymax-1,1,cm_index))
+
+            ncret = nf90_inq_varid(ncid, 'v10', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, v10(0:nxmax-1,0:nymax-1,1,cm_index))
+
+            ncret = nf90_inq_varid(ncid, 'tt2', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, tt2(0:nxmax-1,0:nymax-1,1,cm_index))
+
+            ncret = nf90_inq_varid(ncid, 'td2', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, td2(0:nxmax-1,0:nymax-1,1,cm_index))
+
+            ncret = nf90_inq_varid(ncid, 'lsprec', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, lsprec(0:nxmax-1,0:nymax-1,1,cm_index))
+
+            ncret = nf90_inq_varid(ncid, 'convprec', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, convprec(0:nxmax-1,0:nymax-1,1,cm_index))
+
+            ncret = nf90_inq_varid(ncid, 'sshf', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, sshf(0:nxmax-1,0:nymax-1,1,cm_index))
+
+            ncret = nf90_inq_varid(ncid, 'ssr', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, ssr(0:nxmax-1,0:nymax-1,1,cm_index))
+
+            ncret = nf90_inq_varid(ncid, 'surfstr', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, surfstr(0:nxmax-1,0:nymax-1,1,cm_index))
+
+            ncret = nf90_inq_varid(ncid, 'ustar', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, ustar(0:nxmax-1,0:nymax-1,1,cm_index))
+
+            ncret = nf90_inq_varid(ncid, 'wstar', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, wstar(0:nxmax-1,0:nymax-1,1,cm_index))
+
+            ncret = nf90_inq_varid(ncid, 'hmix', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, hmix(0:nxmax-1,0:nymax-1,1,cm_index))
+
+            ncret = nf90_inq_varid(ncid, 'tropopause', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, tropopause(0:nxmax-1,0:nymax-1,1,cm_index))
+
+            ncret = nf90_inq_varid(ncid, 'oli', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, oli(0:nxmax-1,0:nymax-1,1,cm_index))
+
+            ncret = nf90_inq_varid(ncid, 'diffk', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, diffk(0:nxmax-1,0:nymax-1,1,cm_index))
+
+
+
+
+            PRINT *, 'SUM(ps(0:nxmax-1, 0:nymax-1, 1, cm_index)): ', &
+&                                        SUM(ps(0:nxmax-1,0:nymax-1,1, cm_index))
+
+            PRINT *, 'SUM(wstar(0:nxmax-1, 0:nymax-1, 1, cm_index)): ', &
+&                                        SUM(wstar(0:nxmax-1,0:nymax-1,1, cm_index))
+
+
+
+
+
 
             ! 1d fields
             READ(iounit) z0(:)
