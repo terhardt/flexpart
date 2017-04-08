@@ -156,7 +156,7 @@ module par_mod
   ! Maximum dimensions of the nested input grids
   !*********************************************
 
-  integer,parameter :: maxnests=0, nxmaxn=451, nymaxn=226
+  integer,parameter :: maxnests=1, nxmaxn=180, nymaxn=100
   !integer,parameter :: maxnests=0, nxmaxn=0, nymaxn=0
   !integer,parameter :: maxnests=1,nxmaxn=251,nymaxn=151
 
