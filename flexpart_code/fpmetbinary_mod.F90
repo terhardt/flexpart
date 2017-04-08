@@ -43,7 +43,8 @@ MODULE fpmetbinary_mod
 
     USE com_mod
     USE conv_mod
-    USE par_mod, ONLY : nxmax, nymax, nzmax, nuvzmax, nwzmax, numclass, maxspec
+    USE par_mod, ONLY : nxmax, nymax, nzmax, nuvzmax, nwzmax, numclass, maxspec, &
+&                       maxnests, nxmaxn, nymaxn
 
     USE netcdf
 
@@ -305,7 +306,8 @@ CONTAINS
         INTEGER :: ncret          ! Return value from NetCDF calls
         INTEGER :: ncvarid          ! NetCDF variable ID
 
-        INTEGER :: nxmax_dimid, nymax_dimid, nzmax_dimid, nuvzmax_dimid, nwzmax_dimid
+        INTEGER :: nxmax_dimid, nymax_dimid, nzmax_dimid, nuvzmax_dimid, nwzmax_dimid, &
+&                  maxnests_dimid, nxmaxn_dimid, nymaxn_dimid
 
         INTEGER, DIMENSION(1) :: dim1dids    ! Dimension IDs for 1D arrays
         INTEGER, DIMENSION(2) :: dim2dids    ! Dimension IDs for 2D arrays
@@ -313,12 +315,14 @@ CONTAINS
 
         ! These are used when loading in dimensions from NC file
         CHARACTER(LEN=NF90_MAX_NAME) :: nxmax_dimname, nymax_dimname, nzmax_dimname, &
-&                                       nuvzmax_dimname, nwzmax_dimname
+&                                       nuvzmax_dimname, nwzmax_dimname,&
+&                                       maxnests_dimname, nxmaxn_dimname, nymaxn_dimname
 
         ! These are temporary variables, used in the LOAD option, for 
         ! comparing against the current values in FLEXPART of nxmax, nymax, ...
         INTEGER :: temp_nxmax, temp_nymax, temp_nzmax, &
-&                  temp_nuvzmax, temp_nwzmax
+&                  temp_nuvzmax, temp_nwzmax, &
+&                   temp_maxnests, temp_nxmaxn, temp_nymaxn
 
         CHARACTER(LEN=12) :: temp_preproc_format_version_str
 
@@ -935,6 +939,14 @@ CONTAINS
 
             ! Getting ready to add in nested code
 
+            ! These are compiled max dimensions from par_mod - these are
+            ! not meant to be reassigned during a LOAD, but used as "header"
+            ! information to provide the structure of arrays
+            ncret = nf90_def_dim(ncid, 'maxnests', maxnests, maxnests_dimid)
+            ncret = nf90_def_dim(ncid, 'nxmaxn', nxmaxn, nxmaxn_dimid)
+            ncret = nf90_def_dim(ncid, 'nymaxn', nymaxn, nymaxn_dimid)
+
+
 
             ! Nested, scalar values (for each nest)
             WRITE(iounit) nxn(:)
@@ -1088,6 +1100,8 @@ CONTAINS
                 ! PRINT *, ''
                 STOP
             END IF
+
+
 
 
             ! Scalar values
@@ -1384,6 +1398,40 @@ CONTAINS
 &                                        SUM(bknew(1:nzmax))
 
 
+
+
+            ! Now the nested input grid variables
+            ! Get the compiled values that were written into the FP file, and
+            ! make sure they are equal to the current compiled values, to make
+            ! sure we are working with consistent arrays
+            ncret = nf90_inq_dimid(ncid, 'maxnests', maxnests_dimid)
+            ncret = nf90_inquire_dimension(ncid, maxnests_dimid, maxnests_dimname, &
+&                                                temp_maxnests)
+            PRINT *, 'temp_maxnests: ', temp_maxnests
+
+            ncret = nf90_inq_dimid(ncid, 'nxmaxn', nxmaxn_dimid)
+            ncret = nf90_inquire_dimension(ncid, nxmaxn_dimid, nxmaxn_dimname, &
+&                                                temp_nxmaxn)
+            PRINT *, 'temp_nxmaxn: ', temp_nxmaxn
+
+            ncret = nf90_inq_dimid(ncid, 'nymaxn', nymaxn_dimid)
+            ncret = nf90_inquire_dimension(ncid, nymaxn_dimid, nymaxn_dimname, &
+&                                                temp_nymaxn)
+            PRINT *, 'temp_nymaxn: ', temp_nymaxn
+
+
+            IF ( (temp_nxmaxn == nxmaxn) .AND. (temp_nymaxn == nymaxn) .AND. &
+&                   (temp_maxnests == maxnests) ) THEN
+                CONTINUE
+            ELSE
+                PRINT *, 'Incompatible dimensions between fp file and current FLEXPART!'
+                ! PRINT *, ''
+                PRINT *, '                  FP file     Compiled FP'
+                PRINT *, 'nxmaxn:     ', temp_nxmaxn, '    ', nxmaxn
+                PRINT *, 'nymaxn:     ', temp_nymaxn, '    ', nymaxn
+                PRINT *, 'maxnests:     ', temp_maxnests, '    ', maxnests
+                STOP
+            END IF
 
 
 
