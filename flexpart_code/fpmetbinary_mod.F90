@@ -307,22 +307,26 @@ CONTAINS
         INTEGER :: ncvarid          ! NetCDF variable ID
 
         INTEGER :: nxmax_dimid, nymax_dimid, nzmax_dimid, nuvzmax_dimid, nwzmax_dimid, &
-&                  maxnests_dimid, nxmaxn_dimid, nymaxn_dimid
+&                  maxspec_dimid, numclass_dimid, maxnests_dimid, nxmaxn_dimid, nymaxn_dimid
 
         INTEGER, DIMENSION(1) :: dim1dids    ! Dimension IDs for 1D arrays
         INTEGER, DIMENSION(2) :: dim2dids    ! Dimension IDs for 2D arrays
         INTEGER, DIMENSION(3) :: dim3dids    ! Dimension IDs for 3D arrays
+        INTEGER, DIMENSION(4) :: dim4dids    ! Dimension IDs for 4D arrays
+
 
         ! These are used when loading in dimensions from NC file
         CHARACTER(LEN=NF90_MAX_NAME) :: nxmax_dimname, nymax_dimname, nzmax_dimname, &
 &                                       nuvzmax_dimname, nwzmax_dimname,&
+&                                       maxspec_dimname, numclass_dimname,&
 &                                       maxnests_dimname, nxmaxn_dimname, nymaxn_dimname
 
         ! These are temporary variables, used in the LOAD option, for 
         ! comparing against the current values in FLEXPART of nxmax, nymax, ...
         INTEGER :: temp_nxmax, temp_nymax, temp_nzmax, &
 &                  temp_nuvzmax, temp_nwzmax, &
-&                   temp_maxnests, temp_nxmaxn, temp_nymaxn
+&                  temp_maxspec, temp_numclass,&
+&                  temp_maxnests, temp_nxmaxn, temp_nymaxn
 
         CHARACTER(LEN=12) :: temp_preproc_format_version_str
 
@@ -346,8 +350,8 @@ CONTAINS
             ncret = nf90_def_dim(ncid, 'nzmax', nzmax, nzmax_dimid)
             ncret = nf90_def_dim(ncid, 'nuvzmax', nuvzmax, nuvzmax_dimid)
             ncret = nf90_def_dim(ncid, 'nwzmax', nwzmax, nwzmax_dimid)
-
-
+            ncret = nf90_def_dim(ncid, 'maxspec', maxspec, maxspec_dimid)
+            ncret = nf90_def_dim(ncid, 'numclass', numclass, numclass_dimid)
 
             ! Scalar values
             WRITE(iounit) nx, ny, nxmin1, nymin1, nxfield
@@ -381,7 +385,7 @@ CONTAINS
             ncret = nf90_def_var(ncid, 'nmixz', NF90_INT, ncvarid)
             ncret = nf90_put_var(ncid, ncvarid, nmixz)
 
-            ncret = nf90_def_var(ncid, 'nlev_', NF90_INT, ncvarid)
+            ncret = nf90_def_var(ncid, 'nlev_ec', NF90_INT, ncvarid)
             ncret = nf90_put_var(ncid, ncvarid, nlev_ec)
 
             ncret = nf90_def_var(ncid, 'dx', NF90_FLOAT, ncvarid)
@@ -436,7 +440,7 @@ CONTAINS
             ncret = nf90_put_var(ncid, ncvarid, &
 &                                lsm(0:nxmax-1, 0:nymax-1))
 
-            dim3dids = (/nxmax_dimid, nymax_dimid, numclass/)
+            dim3dids = (/nxmax_dimid, nymax_dimid, numclass_dimid/)
             ! numclass comes from par_mod - number of land use classes
             ncret = nf90_def_var(ncid, 'xlanduse', NF90_FLOAT, &
 &                                       dim3dids, ncvarid)
@@ -835,7 +839,7 @@ CONTAINS
 &                                        SUM(wstar(0:nxmax-1,0:nymax-1,1, cm_index))
 
 
-            dim3dids = (/nxmax_dimid, nymax_dimid, maxspec/)
+            dim3dids = (/nxmax_dimid, nymax_dimid, maxspec_dimid/)
 
             ncret = nf90_def_var(ncid, 'vdep', NF90_FLOAT, &
 &                                       dim3dids, ncvarid)
@@ -857,7 +861,7 @@ CONTAINS
             WRITE(iounit) aknew(:)
             WRITE(iounit) bknew(:)
 
-            dim1dids = (/numclass/)
+            dim1dids = (/numclass_dimid/)
 
             ncret = nf90_def_var(ncid, 'z0', NF90_FLOAT, &
 &                                       dim1dids, ncvarid)
@@ -869,7 +873,7 @@ CONTAINS
 &                                z0(1:numclass))
 
 
-            dim1dids = (/nwzmax/)
+            dim1dids = (/nwzmax_dimid/)
 
             ncret = nf90_def_var(ncid, 'akm', NF90_FLOAT, &
 &                                       dim1dids, ncvarid)
@@ -890,7 +894,7 @@ CONTAINS
 &                                bkm(1:nwzmax))
 
 
-            dim1dids = (/nuvzmax/)
+            dim1dids = (/nuvzmax_dimid/)
 
             ncret = nf90_def_var(ncid, 'akz', NF90_FLOAT, &
 &                                       dim1dids, ncvarid)
@@ -911,7 +915,7 @@ CONTAINS
 &                                bkz(1:nuvzmax))
 
 
-            dim1dids = (/nzmax/)
+            dim1dids = (/nzmax_dimid/)
 
             ncret = nf90_def_var(ncid, 'aknew', NF90_FLOAT, &
 &                                       dim1dids, ncvarid)
@@ -946,9 +950,6 @@ CONTAINS
             ncret = nf90_def_dim(ncid, 'nxmaxn', nxmaxn, nxmaxn_dimid)
             ncret = nf90_def_dim(ncid, 'nymaxn', nymaxn, nymaxn_dimid)
 
-
-
-            ! Nested, scalar values (for each nest)
             WRITE(iounit) nxn(:)
             WRITE(iounit) nyn(:)
             WRITE(iounit) dxn(:)
@@ -956,8 +957,114 @@ CONTAINS
             WRITE(iounit) xlon0n(:)
             WRITE(iounit) ylat0n(:)
 
+            ! Nested, scalar values (for each nest)
+
+            dim1dids = (/maxnests_dimid/)
+
+            ncret = nf90_def_var(ncid, 'nxn', NF90_INT, &
+&                                       dim1dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                nxn(1:maxnests))
+
+            ncret = nf90_def_var(ncid, 'nyn', NF90_INT, &
+&                                       dim1dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                nyn(1:maxnests))
+
+            ncret = nf90_def_var(ncid, 'dxn', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                dxn(1:maxnests))
+
+            ncret = nf90_def_var(ncid, 'dyn', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                dyn(1:maxnests))
+
+            ncret = nf90_def_var(ncid, 'xlon0n', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                xlon0n(1:maxnests))
+
+            ncret = nf90_def_var(ncid, 'ylat0n', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                ylat0n(1:maxnests))
+
+
+
+
             ! Nested fields, static over time
             WRITE(iounit) oron, excessoron, lsmn, xlandusen 
+
+            dim3dids = (/nxmaxn_dimid, nymaxn_dimid, maxnests_dimid/)
+
+            ncret = nf90_def_var(ncid, 'oron', NF90_FLOAT, &
+&                                       dim3dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                oron(0:nxmaxn-1, 0:nymaxn-1, 1:maxnests))
+
+            ncret = nf90_def_var(ncid, 'excessoron', NF90_FLOAT, &
+&                                       dim3dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                excessoron(0:nxmaxn-1, 0:nymaxn-1, 1:maxnests))
+
+            ncret = nf90_def_var(ncid, 'lsmn', NF90_FLOAT, &
+&                                       dim3dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                lsmn(0:nxmaxn-1, 0:nymaxn-1, 1:maxnests))
+
+            dim4dids = (/nxmaxn_dimid, nymaxn_dimid, numclass_dimid, maxnests_dimid/)
+
+            ncret = nf90_def_var(ncid, 'xlandusen', NF90_FLOAT, &
+&                                       dim4dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                xlandusen(0:nxmaxn-1, 0:nymaxn-1, 1:numclass, 1:maxnests))
+
+            PRINT *, 'SUM(xlandusen): ', &
+&                                        SUM(xlandusen)
+
+
 
             ! 3d nested fields
             WRITE(iounit) uun(:,:,:,cm_index,:)
@@ -1081,12 +1188,24 @@ CONTAINS
 &                                                temp_nwzmax)
             PRINT *, 'temp_nwzmax: ', temp_nwzmax
 
+            ncret = nf90_inq_dimid(ncid, 'numclass', numclass_dimid)
+            ncret = nf90_inquire_dimension(ncid, numclass_dimid, numclass_dimname, &
+&                                                temp_numclass)
+            PRINT *, 'temp_numclass: ', temp_numclass
+
+            ncret = nf90_inq_dimid(ncid, 'maxspec', maxspec_dimid)
+            ncret = nf90_inquire_dimension(ncid, maxspec_dimid, maxspec_dimname, &
+&                                                temp_maxspec)
+            PRINT *, 'temp_maxspec: ', temp_maxspec
+
 
 
             IF ( (temp_nxmax == nxmax) .AND. (temp_nymax == nymax) .AND. &
 &                   (temp_nzmax == nzmax) .AND. &
 &                   (temp_nuvzmax == nuvzmax) .AND. &
-&                   (temp_nwzmax == nwzmax) ) THEN
+&                   (temp_nwzmax == nwzmax) .AND. &
+&                   (temp_numclass == numclass) .AND. &
+&                   (temp_maxspec == maxspec) ) THEN
                 CONTINUE
             ELSE
                 PRINT *, 'Incompatible dimensions between fp file and current FLEXPART!'
@@ -1096,7 +1215,9 @@ CONTAINS
                 PRINT *, 'nymax:     ', temp_nymax, '    ', nymax 
                 PRINT *, 'nzmax:     ', temp_nzmax, '    ', nzmax 
                 PRINT *, 'nuvzmax:     ', temp_nuvzmax, '    ', nuvzmax 
-                PRINT *, 'nwzmax:     ', temp_nwzmax, '    ', nwzmax 
+                PRINT *, 'nwzmax:     ', temp_nwzmax, '    ', nwzmax
+                PRINT *, 'numclass:     ', temp_numclass, '    ', numclass
+                PRINT *, 'maxspec:     ', temp_maxspec, '    ', maxspec
                 ! PRINT *, ''
                 STOP
             END IF
@@ -1419,6 +1540,10 @@ CONTAINS
 &                                                temp_nymaxn)
             PRINT *, 'temp_nymaxn: ', temp_nymaxn
 
+            ! Note that maxspec_dimid and numclass_dimid were checked above
+
+
+
 
             IF ( (temp_nxmaxn == nxmaxn) .AND. (temp_nymaxn == nymaxn) .AND. &
 &                   (temp_maxnests == maxnests) ) THEN
@@ -1444,8 +1569,47 @@ CONTAINS
             READ(iounit) ylat0n(:)
 
 
+            ncret = nf90_inq_varid(ncid, 'nxn', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, nxn(1:maxnests))
+
+            ncret = nf90_inq_varid(ncid, 'nyn', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, nyn(1:maxnests))
+
+            ncret = nf90_inq_varid(ncid, 'dxn', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, dxn(1:maxnests))
+
+            ncret = nf90_inq_varid(ncid, 'dyn', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, dyn(1:maxnests))
+
+            ncret = nf90_inq_varid(ncid, 'xlon0n', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, xlon0n(1:maxnests))
+
+            ncret = nf90_inq_varid(ncid, 'ylat0n', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, ylat0n(1:maxnests))
+
+
+
             ! Nested fields, static over time
             READ(iounit) oron, excessoron, lsmn, xlandusen 
+
+            ncret = nf90_inq_varid(ncid, 'oron', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, oron(0:nxmaxn-1,0:nymaxn-1,1:maxnests))
+
+            ncret = nf90_inq_varid(ncid, 'excessoron', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, excessoron(0:nxmaxn-1,0:nymaxn-1,1:maxnests))
+
+            ncret = nf90_inq_varid(ncid, 'lsmn', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, lsmn(0:nxmaxn-1,0:nymaxn-1,1:maxnests))
+
+            ncret = nf90_inq_varid(ncid, 'xlandusen', ncvarid)
+            ncret = nf90_get_var(ncid, ncvarid, xlandusen(0:nxmaxn-1,0:nymaxn-1,1:numclass,1:maxnests))
+
+
+            PRINT *, 'SUM(xlandusen): ', &
+&                                        SUM(xlandusen)
+
+
+
 
             ! 3d nested fields
             READ(iounit) uun(:,:,:,cm_index,:)
