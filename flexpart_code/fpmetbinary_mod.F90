@@ -308,7 +308,7 @@ CONTAINS
 
         INTEGER :: nxmax_dimid, nymax_dimid, nzmax_dimid, nuvzmax_dimid, nwzmax_dimid, &
 &                  maxspec_dimid, numclass_dimid, maxnests_dimid, nxmaxn_dimid, nymaxn_dimid, &
-&                  zero_to_nzmax_dimid
+&                  zero_to_nzmax_dimid, zero_to_maxnests_dimid, polemap_dimid
 
 
         INTEGER, DIMENSION(1) :: dim1dids    ! Dimension IDs for 1D arrays
@@ -325,7 +325,8 @@ CONTAINS
 &                                       nuvzmax_dimname, nwzmax_dimname,&
 &                                       maxspec_dimname, numclass_dimname,&
 &                                       maxnests_dimname, nxmaxn_dimname, nymaxn_dimname, &
-&                                       zero_to_nzmax_dimname
+&                                       zero_to_nzmax_dimname, zero_to_maxnests_dimname, &
+&                                       polemap_dimname
 
         ! These are temporary variables, used in the LOAD option, for 
         ! comparing against the current values in FLEXPART of nxmax, nymax, ...
@@ -367,7 +368,10 @@ CONTAINS
             call handle_nf90_err(ncret)
             ncret = nf90_def_dim(ncid, 'zero_to_nzmax', nzmax+1, zero_to_nzmax_dimid)
             call handle_nf90_err(ncret)
-
+            ncret = nf90_def_dim(ncid, 'zero_to_maxnests', maxnests+1, zero_to_maxnests_dimid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_def_dim(ncid, 'polemap_dim', 9, polemap_dimid)
+            call handle_nf90_err(ncret)
 
             ! Scalar values
             WRITE(iounit) nx, ny, nxmin1, nymin1, nxfield
@@ -1491,7 +1495,7 @@ CONTAINS
             WRITE(iounit) diffkn(:,:,:,cm_index,:)
             WRITE(iounit) vdepn(:,:,:,cm_index,:)
 
-            dim3dids = (/nxmax_dimid, nymax_dimid, maxnests_dimid/)
+            dim3dids = (/nxmaxn_dimid, nymaxn_dimid, maxnests_dimid/)
 
             ncret = nf90_def_var(ncid, 'psn', NF90_FLOAT, &
 &                                       dim3dids, ncvarid)
@@ -1505,14 +1509,244 @@ CONTAINS
 &                                psn(0:nxmaxn-1, 0:nymaxn-1, 1, cm_index, 1:maxnests))
             call handle_nf90_err(ncret)
 
+            ncret = nf90_def_var(ncid, 'sdn', NF90_FLOAT, &
+&                                       dim3dids, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                sdn(0:nxmaxn-1, 0:nymaxn-1, 1, cm_index, 1:maxnests))
+            call handle_nf90_err(ncret)
 
+            ncret = nf90_def_var(ncid, 'msln', NF90_FLOAT, &
+&                                       dim3dids, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                msln(0:nxmaxn-1, 0:nymaxn-1, 1, cm_index, 1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_def_var(ncid, 'tccn', NF90_FLOAT, &
+&                                       dim3dids, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                tccn(0:nxmaxn-1, 0:nymaxn-1, 1, cm_index, 1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_def_var(ncid, 'u10n', NF90_FLOAT, &
+&                                       dim3dids, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                u10n(0:nxmaxn-1, 0:nymaxn-1, 1, cm_index, 1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_def_var(ncid, 'v10n', NF90_FLOAT, &
+&                                       dim3dids, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                v10n(0:nxmaxn-1, 0:nymaxn-1, 1, cm_index, 1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_def_var(ncid, 'tt2n', NF90_FLOAT, &
+&                                       dim3dids, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                tt2n(0:nxmaxn-1, 0:nymaxn-1, 1, cm_index, 1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_def_var(ncid, 'td2n', NF90_FLOAT, &
+&                                       dim3dids, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                td2n(0:nxmaxn-1, 0:nymaxn-1, 1, cm_index, 1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_def_var(ncid, 'lsprecn', NF90_FLOAT, &
+&                                       dim3dids, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                lsprecn(0:nxmaxn-1, 0:nymaxn-1, 1, cm_index, 1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_def_var(ncid, 'convprecn', NF90_FLOAT, &
+&                                       dim3dids, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                convprecn(0:nxmaxn-1, 0:nymaxn-1, 1, cm_index, 1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_def_var(ncid, 'sshfn', NF90_FLOAT, &
+&                                       dim3dids, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                sshfn(0:nxmaxn-1, 0:nymaxn-1, 1, cm_index, 1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_def_var(ncid, 'ssrn', NF90_FLOAT, &
+&                                       dim3dids, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                ssrn(0:nxmaxn-1, 0:nymaxn-1, 1, cm_index, 1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_def_var(ncid, 'surfstrn', NF90_FLOAT, &
+&                                       dim3dids, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                surfstrn(0:nxmaxn-1, 0:nymaxn-1, 1, cm_index, 1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_def_var(ncid, 'ustarn', NF90_FLOAT, &
+&                                       dim3dids, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                ustarn(0:nxmaxn-1, 0:nymaxn-1, 1, cm_index, 1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_def_var(ncid, 'wstarn', NF90_FLOAT, &
+&                                       dim3dids, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                wstarn(0:nxmaxn-1, 0:nymaxn-1, 1, cm_index, 1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_def_var(ncid, 'hmixn', NF90_FLOAT, &
+&                                       dim3dids, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                hmixn(0:nxmaxn-1, 0:nymaxn-1, 1, cm_index, 1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_def_var(ncid, 'tropopausen', NF90_FLOAT, &
+&                                       dim3dids, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                tropopausen(0:nxmaxn-1, 0:nymaxn-1, 1, cm_index, 1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_def_var(ncid, 'olin', NF90_FLOAT, &
+&                                       dim3dids, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                olin(0:nxmaxn-1, 0:nymaxn-1, 1, cm_index, 1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_def_var(ncid, 'diffkn', NF90_FLOAT, &
+&                                       dim3dids, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                diffkn(0:nxmaxn-1, 0:nymaxn-1, 1, cm_index, 1:maxnests))
+            call handle_nf90_err(ncret)
+
+            dim4dids = (/nxmaxn_dimid, nymaxn_dimid, maxspec_dimid, maxnests_dimid/)
+
+
+
+            ncret = nf90_def_var(ncid, 'vdepn', NF90_FLOAT, &
+&                                       dim4dids, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                vdepn(0:nxmaxn-1, 0:nymaxn-1, 1:maxspec, cm_index, 1:maxnests))
+            call handle_nf90_err(ncret)
 
 
 
 
             PRINT *, 'SUM(psn): ', SUM(psn(:,:,:,cm_index,:))
-
-
+            PRINT *, 'SUM(surfstrn): ', SUM(surfstrn(:,:,:,cm_index,:))
+            PRINT *, 'SUM(vdepn): ', SUM(vdepn(:,:,:,cm_index,:))
 
 
 
@@ -1526,11 +1760,150 @@ CONTAINS
             WRITE(iounit) xrn(:)
             WRITE(iounit) yrn(:)
 
+            dim1dids = (/zero_to_maxnests_dimid/)
+
+            ncret = nf90_def_var(ncid, 'xresoln', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                xresoln(0:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_def_var(ncid, 'yresoln', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                yresoln(0:maxnests))
+            call handle_nf90_err(ncret)
+
+            dim1dids = (/maxnests_dimid/)
+
+            ncret = nf90_def_var(ncid, 'xln', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                xln(1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_def_var(ncid, 'yln', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                yln(1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_def_var(ncid, 'xrn', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                xrn(1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_def_var(ncid, 'yrn', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                yrn(1:maxnests))
+            call handle_nf90_err(ncret)
+
+            PRINT *, 'SUM(yresoln): ', SUM(yresoln)
+            PRINT *, 'SUM(xrn): ', SUM(xrn)
+
+
+
             ! Variables for polar stereographic projection
             WRITE(iounit) xglobal, sglobal, nglobal
             WRITE(iounit) switchnorthg, switchsouthg
             WRITE(iounit) southpolemap(:)
             WRITE(iounit) northpolemap(:)
+
+
+
+            dim1dids = (/polemap_dimid/)
+
+            ncret = nf90_def_var(ncid, 'southpolemap', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                southpolemap(:))
+
+            ncret = nf90_def_var(ncid, 'northpolemap', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                northpolemap(:))
+
+
+
+
+            ncret = nf90_def_var(ncid, 'xglobal', NF90_INT, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, xglobal)
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_def_var(ncid, 'sglobal', NF90_INT, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, sglobal)
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_def_var(ncid, 'nglobal', NF90_INT, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, nglobal)
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_def_var(ncid, 'switchnorthg', NF90_FLOAT, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, switchnorthg)
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_def_var(ncid, 'switchsouthg', NF90_FLOAT, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, switchsouthg)
+            call handle_nf90_err(ncret)
+
+
+
+            PRINT *, 'SUM(northpolemap): ', SUM(northpolemap)
+            PRINT *, 'xglobal: ', xglobal
+            PRINT *, 'sglobal: ', sglobal
+            PRINT *, 'nglobal: ', nglobal
+            PRINT *, 'switchsouthg: ', switchsouthg
 
             ! Variables declared in conv_mod (convection)
             WRITE(iounit) pconv(:)
@@ -2304,9 +2677,107 @@ CONTAINS
             ncret = nf90_get_var(ncid, ncvarid, psn(0:nxmaxn-1,0:nymaxn-1,1,cm_index,1:maxnests))
             call handle_nf90_err(ncret)
 
+            ncret = nf90_inq_varid(ncid, 'sdn', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, sdn(0:nxmaxn-1,0:nymaxn-1,1,cm_index,1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'msln', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, msln(0:nxmaxn-1,0:nymaxn-1,1,cm_index,1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'tccn', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, tccn(0:nxmaxn-1,0:nymaxn-1,1,cm_index,1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'u10n', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, u10n(0:nxmaxn-1,0:nymaxn-1,1,cm_index,1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'v10n', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, v10n(0:nxmaxn-1,0:nymaxn-1,1,cm_index,1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'tt2n', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, tt2n(0:nxmaxn-1,0:nymaxn-1,1,cm_index,1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'td2n', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, td2n(0:nxmaxn-1,0:nymaxn-1,1,cm_index,1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'lsprecn', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, lsprecn(0:nxmaxn-1,0:nymaxn-1,1,cm_index,1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'convprecn', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, convprecn(0:nxmaxn-1,0:nymaxn-1,1,cm_index,1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'sshfn', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, sshfn(0:nxmaxn-1,0:nymaxn-1,1,cm_index,1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'ssrn', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, ssrn(0:nxmaxn-1,0:nymaxn-1,1,cm_index,1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'surfstrn', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, surfstrn(0:nxmaxn-1,0:nymaxn-1,1,cm_index,1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'ustarn', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, ustarn(0:nxmaxn-1,0:nymaxn-1,1,cm_index,1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'wstarn', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, wstarn(0:nxmaxn-1,0:nymaxn-1,1,cm_index,1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'hmixn', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, hmixn(0:nxmaxn-1,0:nymaxn-1,1,cm_index,1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'tropopausen', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, tropopausen(0:nxmaxn-1,0:nymaxn-1,1,cm_index,1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'olin', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, olin(0:nxmaxn-1,0:nymaxn-1,1,cm_index,1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'diffkn', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, diffkn(0:nxmaxn-1,0:nymaxn-1,1,cm_index,1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'vdepn', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, vdepn(0:nxmaxn-1,0:nymaxn-1,1:maxspec,cm_index,1:maxnests))
+            call handle_nf90_err(ncret)
+
+
 
 
             PRINT *, 'SUM(psn): ', SUM(psn(:,:,:,cm_index,:))
+            PRINT *, 'SUM(surfstrn): ', SUM(surfstrn(:,:,:,cm_index,:))
+            PRINT *, 'SUM(vdepn): ', SUM(vdepn(:,:,:,cm_index,:))
 
 
 
@@ -2318,11 +2789,94 @@ CONTAINS
             READ(iounit) xrn(:)
             READ(iounit) yrn(:)
 
+            ncret = nf90_inq_varid(ncid, 'xresoln', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, xresoln(0:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'yresoln', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, yresoln(0:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'xln', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, xln(1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'yln', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, yln(1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'xrn', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, xrn(1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'yrn', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, yrn(1:maxnests))
+            call handle_nf90_err(ncret)
+
+
+
+            PRINT *, 'SUM(yresoln): ', SUM(yresoln)
+            PRINT *, 'SUM(xrn): ', SUM(xrn)
+
+
+
             ! Variables for polar stereographic projection
             READ(iounit) xglobal, sglobal, nglobal
             READ(iounit) switchnorthg, switchsouthg
             READ(iounit) southpolemap(:)
             READ(iounit) northpolemap(:)
+
+
+            ncret = nf90_inq_varid(ncid, 'southpolemap', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, southpolemap(:))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'northpolemap', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, northpolemap(:))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'xglobal', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, xglobal)
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'sglobal', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, sglobal)
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'nglobal', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, nglobal)
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'switchnorthg', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, switchnorthg)
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'switchsouthg', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, switchsouthg)
+            call handle_nf90_err(ncret)
+
+
+            PRINT *, 'SUM(northpolemap): ', SUM(northpolemap)
+            PRINT *, 'xglobal: ', xglobal
+            PRINT *, 'sglobal: ', sglobal
+            PRINT *, 'nglobal: ', nglobal
+            PRINT *, 'switchsouthg: ', switchsouthg
+
+
+
 
             ! Variables declared in conv_mod (convection)
             READ(iounit) pconv(:)
