@@ -3218,12 +3218,6 @@ CONTAINS
 
 
 
-
-
-
-
-
-
         ELSE
             STOP 'fpio(): Illegal operation' 
             
