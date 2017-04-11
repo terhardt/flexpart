@@ -303,12 +303,18 @@ CONTAINS
                                                   ! Should be 1 or 2 
 
 
+        ! Helper functions (in this module)
+        !INTEGER :: logical2integer
+        !LOGICAL :: integer2logical
+
+        INTEGER :: temp_integer   ! temporary value
         INTEGER :: ncret          ! Return value from NetCDF calls
         INTEGER :: ncvarid          ! NetCDF variable ID
 
         INTEGER :: nxmax_dimid, nymax_dimid, nzmax_dimid, nuvzmax_dimid, nwzmax_dimid, &
 &                  maxspec_dimid, numclass_dimid, maxnests_dimid, nxmaxn_dimid, nymaxn_dimid, &
-&                  zero_to_nzmax_dimid, zero_to_maxnests_dimid, polemap_dimid
+&                  zero_to_nzmax_dimid, zero_to_maxnests_dimid, polemap_dimid, &
+&                  nconvlevmax_dimid, na_dimid
 
 
         INTEGER, DIMENSION(1) :: dim1dids    ! Dimension IDs for 1D arrays
@@ -326,7 +332,7 @@ CONTAINS
 &                                       maxspec_dimname, numclass_dimname,&
 &                                       maxnests_dimname, nxmaxn_dimname, nymaxn_dimname, &
 &                                       zero_to_nzmax_dimname, zero_to_maxnests_dimname, &
-&                                       polemap_dimname
+&                                       polemap_dimname, nconvlevmax_dimname, na_dimname
 
         ! These are temporary variables, used in the LOAD option, for 
         ! comparing against the current values in FLEXPART of nxmax, nymax, ...
@@ -366,11 +372,22 @@ CONTAINS
             call handle_nf90_err(ncret)
             ncret = nf90_def_dim(ncid, 'numclass', numclass, numclass_dimid)
             call handle_nf90_err(ncret)
+
+            ! There are a handful of variables indexed from 0 to n, rather than 0 to n-1,
+            ! so these dimensions handle that.  What a pain.
             ncret = nf90_def_dim(ncid, 'zero_to_nzmax', nzmax+1, zero_to_nzmax_dimid)
             call handle_nf90_err(ncret)
             ncret = nf90_def_dim(ncid, 'zero_to_maxnests', maxnests+1, zero_to_maxnests_dimid)
             call handle_nf90_err(ncret)
+
+            ! This is for a couple of small arrays that store polar stereographic stuff
             ncret = nf90_def_dim(ncid, 'polemap_dim', 9, polemap_dimid)
+            call handle_nf90_err(ncret)
+
+            ! These two values come from conv_mod
+            ncret = nf90_def_dim(ncid, 'nconvlevmax_dim', nconvlevmax, nconvlevmax_dimid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_def_dim(ncid, 'na_dim', na, na_dimid)
             call handle_nf90_err(ncret)
 
             ! Scalar values
@@ -1871,20 +1888,21 @@ CONTAINS
 
 
 
-
+            ! xglobal, sglobal, nglobal are LOGICAL vars, and need to be converted
+            ! to INTEGER for NetCDF storage
             ncret = nf90_def_var(ncid, 'xglobal', NF90_INT, ncvarid)
             call handle_nf90_err(ncret)
-            ncret = nf90_put_var(ncid, ncvarid, xglobal)
+            ncret = nf90_put_var(ncid, ncvarid, logical2integer(xglobal))
             call handle_nf90_err(ncret)
 
             ncret = nf90_def_var(ncid, 'sglobal', NF90_INT, ncvarid)
             call handle_nf90_err(ncret)
-            ncret = nf90_put_var(ncid, ncvarid, sglobal)
+            ncret = nf90_put_var(ncid, ncvarid, logical2integer(sglobal))
             call handle_nf90_err(ncret)
 
             ncret = nf90_def_var(ncid, 'nglobal', NF90_INT, ncvarid)
             call handle_nf90_err(ncret)
-            ncret = nf90_put_var(ncid, ncvarid, nglobal)
+            ncret = nf90_put_var(ncid, ncvarid, logical2integer(nglobal))
             call handle_nf90_err(ncret)
 
             ncret = nf90_def_var(ncid, 'switchnorthg', NF90_FLOAT, ncvarid)
@@ -1923,6 +1941,192 @@ CONTAINS
             WRITE(iounit) qsconv(:)
             WRITE(iounit) psconv, tt2conv, td2conv
             WRITE(iounit) nconvlev, nconvtop
+
+
+            dim1dids = (/nconvlevmax_dimid/)
+
+            ncret = nf90_def_var(ncid, 'pconv', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                pconv(:))
+
+            ncret = nf90_def_var(ncid, 'dpr', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                dpr(:))
+
+            ncret = nf90_def_var(ncid, 'pconv_hpa', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                pconv_hpa(:))
+
+            ncret = nf90_def_var(ncid, 'ft', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                ft(:))
+
+            ncret = nf90_def_var(ncid, 'fq', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                fq(:))
+
+            ncret = nf90_def_var(ncid, 'sub', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                sub(:))
+
+            dim1dids = (/na_dimid/)
+
+            ncret = nf90_def_var(ncid, 'phconv', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                phconv(:))
+
+            ncret = nf90_def_var(ncid, 'phconv_hpa', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                phconv_hpa(:))
+
+            ncret = nf90_def_var(ncid, 'tconv', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                tconv(:))
+
+            ncret = nf90_def_var(ncid, 'qconv', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                qconv(:))
+
+            ncret = nf90_def_var(ncid, 'qsconv', NF90_FLOAT, &
+&                                       dim1dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                qsconv(:))
+
+            ! New dimensions
+            dim2dids = (/nconvlevmax_dimid, nconvlevmax_dimid/)
+
+            ncret = nf90_def_var(ncid, 'fmass', NF90_FLOAT, &
+&                                       dim2dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                fmass(:,:))
+
+            ncret = nf90_def_var(ncid, 'fmassfrac', NF90_FLOAT, &
+&                                       dim2dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                fmassfrac(:,:))
+
+
+            ! New dimensions
+            dim2dids = (/nxmax_dimid, nymax_dimid/)
+
+            ncret = nf90_def_var(ncid, 'cbaseflux', NF90_FLOAT, &
+&                                       dim2dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                cbaseflux(0:nxmax-1,0:nymax-1))
+
+            ! New dimensions
+            dim3dids = (/nxmaxn_dimid, nymaxn_dimid, maxnests_dimid/)
+
+            ncret = nf90_def_var(ncid, 'cbasefluxn', NF90_FLOAT, &
+&                                       dim3dids, ncvarid)
+            ncret = nf90_def_var_deflate(ncid, ncvarid,   &
+&                                        shuffle=0,     &
+&                                        deflate=1,     &
+&                                        deflate_level=DEF_LEVEL)
+            ncret = nf90_put_var(ncid, ncvarid, &
+&                                cbasefluxn(0:nxmaxn-1,0:nymaxn-1,1:maxnests))
+
+
+            ! Scalars
+            ncret = nf90_def_var(ncid, 'psconv', NF90_FLOAT, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, psconv)
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_def_var(ncid, 'tt2conv', NF90_FLOAT, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, tt2conv)
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_def_var(ncid, 'td2conv', NF90_FLOAT, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, td2conv)
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_def_var(ncid, 'nconvlev', NF90_INT, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, nconvlev)
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_def_var(ncid, 'nconvtop', NF90_INT, ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_put_var(ncid, ncvarid, nconvtop)
+            call handle_nf90_err(ncret)
+
+            PRINT *, 'SUM(pconv): ', SUM(pconv)
+            PRINT *, 'SUM(qconv): ', SUM(qconv)
+            PRINT *, 'SUM(fmassfrac): ', SUM(fmassfrac)
+            PRINT *, 'SUM(cbasefluxn): ', SUM(cbasefluxn)
+            PRINT *, 'tt2conv: ', tt2conv
+            PRINT *, 'nconvlev: ', nconvlev
+
+
 
         ELSE IF (op == 'LOAD') THEN 
 
@@ -2843,20 +3047,25 @@ CONTAINS
             ncret = nf90_get_var(ncid, ncvarid, northpolemap(:))
             call handle_nf90_err(ncret)
 
+            ! xglobal, sglobal, nglobal are LOGICAL vars, and need to be converted
+            ! to INTEGER for NetCDF storage
             ncret = nf90_inq_varid(ncid, 'xglobal', ncvarid)
             call handle_nf90_err(ncret)
-            ncret = nf90_get_var(ncid, ncvarid, xglobal)
+            ncret = nf90_get_var(ncid, ncvarid, temp_integer)
             call handle_nf90_err(ncret)
+            xglobal = integer2logical(temp_integer)
 
             ncret = nf90_inq_varid(ncid, 'sglobal', ncvarid)
             call handle_nf90_err(ncret)
-            ncret = nf90_get_var(ncid, ncvarid, sglobal)
+            ncret = nf90_get_var(ncid, ncvarid, temp_integer)
             call handle_nf90_err(ncret)
+            sglobal = integer2logical(temp_integer)
 
             ncret = nf90_inq_varid(ncid, 'nglobal', ncvarid)
             call handle_nf90_err(ncret)
-            ncret = nf90_get_var(ncid, ncvarid, nglobal)
+            ncret = nf90_get_var(ncid, ncvarid, temp_integer)
             call handle_nf90_err(ncret)
+            nglobal = integer2logical(temp_integer)
 
             ncret = nf90_inq_varid(ncid, 'switchnorthg', ncvarid)
             call handle_nf90_err(ncret)
@@ -2896,6 +3105,124 @@ CONTAINS
             READ(iounit) qsconv(:)
             READ(iounit) psconv, tt2conv, td2conv
             READ(iounit) nconvlev, nconvtop
+
+            ncret = nf90_inq_varid(ncid, 'pconv', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, pconv(:))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'dpr', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, dpr(:))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'pconv_hpa', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, pconv_hpa(:))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'ft', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, ft(:))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'fq', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, fq(:))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'sub', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, sub(:))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'phconv', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, phconv(:))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'phconv_hpa', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, phconv_hpa(:))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'tconv', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, tconv(:))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'qconv', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, qconv(:))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'qsconv', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, qsconv(:))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'fmass', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, fmass(:,:))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'fmassfrac', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, fmassfrac(:,:))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'cbaseflux', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, cbaseflux(0:nxmax-1,0:nymax-1))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'cbasefluxn', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, cbasefluxn(0:nxmaxn-1,0:nymaxn-1,1:maxnests))
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'psconv', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, psconv)
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'tt2conv', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, tt2conv)
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'td2conv', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, td2conv)
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'nconvlev', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, nconvlev)
+            call handle_nf90_err(ncret)
+
+            ncret = nf90_inq_varid(ncid, 'nconvtop', ncvarid)
+            call handle_nf90_err(ncret)
+            ncret = nf90_get_var(ncid, ncvarid, nconvtop)
+            call handle_nf90_err(ncret)
+
+
+
+
+            PRINT *, 'SUM(pconv): ', SUM(pconv)
+            PRINT *, 'SUM(qconv): ', SUM(qconv)
+            PRINT *, 'SUM(fmassfrac): ', SUM(fmassfrac)
+            PRINT *, 'SUM(cbasefluxn): ', SUM(cbasefluxn)
+            PRINT *, 'tt2conv: ', tt2conv
+            PRINT *, 'nconvlev: ', nconvlev
+
+
+
+
+
+
+
+
 
         ELSE
             STOP 'fpio(): Illegal operation' 
@@ -2964,6 +3291,44 @@ CONTAINS
     end subroutine handle_nf90_err
 
 
+    INTEGER FUNCTION logical2integer(logical_value)
+        IMPLICIT NONE
+
+        ! Auxiliary function to convert logical values to
+        ! integers.  THIS DOES NO TYPE CHECKING!!!
+
+
+        LOGICAL, INTENT(IN) :: logical_value
+
+        IF (logical_value .EQV. .TRUE.) THEN
+            logical2integer = 1
+        ELSE
+            logical2integer = 0
+        ENDIF
+
+        RETURN
+
+    END FUNCTION logical2integer
+
+
+    LOGICAL FUNCTION integer2logical(integer_value)
+        IMPLICIT NONE
+
+        ! Auxiliary function to convert integer values to
+        ! logical.  THIS DOES NO TYPE CHECKING!!!
+
+
+        INTEGER, INTENT(IN) :: integer_value
+
+        IF (integer_value .EQ. 0) THEN
+            integer2logical = .FALSE.
+        ELSE
+            integer2logical = .TRUE.
+        ENDIF
+
+        RETURN
+
+    END FUNCTION integer2logical
 
 
 END MODULE fpmetbinary_mod
