@@ -62,14 +62,14 @@ ifeq ($(gcc), 4.9)
 	LIBPATH1 = ${ROOT_DIR}/lib
 else 
 # Compiled libraries under user ~flexpart, gfortran v5.4
-	ROOT_DIR = /homevip/flexpart/
+	ROOT_DIR = ~/Source/flexpart
 
 	F90	  = /usr/bin/gfortran
 	MPIF90    = /usr/bin/mpifort
 
-	INCPATH1  = ${ROOT_DIR}/gcc-5.4.0/include	
-	INCPATH2  = /usr/include
-	LIBPATH1 = ${ROOT_DIR}/gcc-5.4.0/lib
+	INCPATH1  = /usr/include/
+	INCPATH2  = /usr/lib/x86_64-linux-gnu/fortran/gfortran-mod-15
+	LIBPATH1 = /usr/lib/x86_64-linux-gnu/
 endif
 
 
@@ -87,12 +87,12 @@ VPATH = gributils/
 
 
 ## OPTIMIZATION LEVEL
-O_LEV = 0 # [0,1,2,3,g,s,fast]
+O_LEV = 3 # [0,1,2,3,g,s,fast]
 O_LEV_DBG = g # [0,g]
 
 ## LIBRARIES
 #LIBS = -lgrib_api_f90 -lgrib_api -lm -ljasper -lnetcdff
-LIBS = -lgrib_api_f90 -lgrib_api -lm -ljasper $(NCOPT)
+LIBS = -leccodes_f90 -leccodes -lm -ljasper $(NCOPT)
 
 FFLAGS   = -I$(INCPATH1) -I$(INCPATH2) -O$(O_LEV) -g -cpp -m64 -mcmodel=medium -fconvert=little-endian -frecord-marker=4 -fmessage-length=0 -flto=jobserver -O$(O_LEV) $(NCOPT) $(FUSER)  #-Warray-bounds -fcheck=all # -march=native
 
