@@ -196,7 +196,7 @@ module par_mod
   !integer maxxgrid,maxygrid,maxzgrid,maxxgridn,maxygridn
   !integer,parameter :: maxxgrid=361,maxygrid=181,maxxgridn=0,maxygridn=0)
 
-  integer,parameter :: maxreceptor=20
+  integer,parameter :: maxreceptor=1
 
   ! maxreceptor             maximum number of receptor points
 
@@ -249,7 +249,7 @@ module par_mod
   ! Dimension of random number field
   !*********************************
 
-  integer,parameter :: maxrand=1000000
+  integer,parameter :: maxrand=5000000
 
   ! maxrand                 number of random numbers used
   
