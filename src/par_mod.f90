@@ -205,10 +205,11 @@ integer,parameter :: nxmax=181,nymax=91,nuvzmax=92,nwzmax=92,nzmax=92,nxshift=0 
   ! Maximum number of particles, species, and similar
   !**************************************************
 
-  integer,parameter :: maxpart=38000000
+  integer,parameter :: maxpart=50000000
   integer,parameter :: maxspec=1
 
-  real,parameter :: minmass=0.0001
+  ! real,parameter :: minmass=0.0001 
+  real,parameter :: minmass=0.0000001 
 
   ! maxpart                 Maximum number of particles
   ! maxspec                 Maximum number of chemical species per release
