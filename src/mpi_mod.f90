@@ -98,7 +98,7 @@ module mpi_mod
 ! .true. if only using synchronous MPI send/recv (default)
 ! If setting this to .false., numwfmem must be set to 3
 !===============================================================================
-  logical :: lmp_sync=.false. 
+  logical :: lmp_sync=.true.
 !===============================================================================
 
 ! mp_dbg_mode       Used for debugging MPI.
