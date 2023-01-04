@@ -49,38 +49,28 @@ FLEXPART-MPI-DBG = DBG_FLEXPART_MPI
 # Serial processing executable
 FLEXPART-SERIAL = FLEXPART
 
+ROOT_DIR = /global/AWIsoft
+GRIB_API = ${ROOT_DIR}/eccodes/2.8.0
+NETCDF = ${ROOT_DIR}/netcdf/4.6.1_gnu
 
-ifeq ($(gcc), 4.9)
-# Compiled libraries under user ~flexpart, gfortran v4.9
-	ROOT_DIR = /homevip/flexpart/
+F90	  = /usr/bin/gfortran
+MPIF90    = ${ROOT_DIR}/intel/2020/compilers_and_libraries_2020.2.254/linux/mpi/intel64/bin/mpif90
 
-	F90	  = ${ROOT_DIR}/gcc-4.9.1/bin/gfortran
-	MPIF90    = ${ROOT_DIR}/bin/mpifort
+INCPATH1  = ${GRIB_API}/include
+LIBPATH1 = ${GRIB_API}/lib
 
-	INCPATH1  = ${ROOT_DIR}/gcc-4.9.1/include	
-	INCPATH2  = ${ROOT_DIR}/include
-	LIBPATH1 = ${ROOT_DIR}/lib
-else 
-# Compiled libraries under user ~flexpart, gfortran v5.4
-	ROOT_DIR = ~/Source/flexpart
-
-	F90	  = /usr/bin/gfortran
-	MPIF90    = /usr/bin/mpifort
-
-	INCPATH1  = /usr/include/
-	INCPATH2  = /usr/lib/x86_64-linux-gnu/fortran/gfortran-mod-15
-	LIBPATH1 = /usr/lib/x86_64-linux-gnu/
-endif
+LIBPATH2 = ${NETCDF}/lib
+INCPATH2 = ${NETCDF}/include
 
 
 ### Enable netCDF output?
 ifeq ($(ncf), yes)
-	NCOPT = -DUSE_NCF -lnetcdff	
+	NCOPT = -DUSE_NCF -lnetcdff
 else
 	NCOPT = -UUSE_NCF
 endif
 
-
+# FUSER = -DUSE_MPIINPLACE
 
 # path to gributils used to detect meteodata format
 VPATH = gributils/
@@ -91,14 +81,14 @@ O_LEV = 3 # [0,1,2,3,g,s,fast]
 O_LEV_DBG = g # [0,g]
 
 ## LIBRARIES
-#LIBS = -lgrib_api_f90 -lgrib_api -lm -ljasper -lnetcdff
+# LIBS = -lgrib_api_f90 -lgrib_api -lm -ljasper $(NCOPT) 
 LIBS = -leccodes_f90 -leccodes -lm -ljasper $(NCOPT)
 
-FFLAGS   = -I$(INCPATH1) -I$(INCPATH2) -O$(O_LEV) -g -cpp -m64 -mcmodel=medium -fconvert=little-endian -frecord-marker=4 -fmessage-length=0 -flto=jobserver -O$(O_LEV) $(NCOPT) $(FUSER)  #-Warray-bounds -fcheck=all # -march=native
+FFLAGS   = -I$(INCPATH1) -I$(INCPATH2) -O$(O_LEV) -cpp -m64 -mcmodel=medium -fconvert=little-endian -frecord-marker=4 -fmessage-length=0 -flto=jobserver -O$(O_LEV) $(NCOPT) $(FUSER) # -g -Warray-bounds -fcheck=all -fbacktrace # -march=native
 
-DBGFLAGS = -I$(INCPATH1) -I$(INCPATH2) -O$(O_LEV_DBG) -g3 -ggdb3 -cpp -m64 -mcmodel=medium -fconvert=little-endian -frecord-marker=4 -fmessage-length=0 -flto=jobserver -O$(O_LEV_DBG) $(NCOPT) -fbacktrace   -Wall  -fdump-core $(FUSER)  #  -ffpe-trap=invalid,overflow,denormal,underflow,zero  -Warray-bounds -fcheck=all
+DBGFLAGS = -I$(INCPATH1) -I$(INCPATH2) -O$(O_LEV_DBG) -g3 -ggdb3 -cpp -m64 -mcmodel=medium -fconvert=little-endian -frecord-marker=4 -fmessage-length=0 -flto=jobserver -O$(O_LEV_DBG) -fbacktrace   -Wall  -fdump-core $(FUSER)  #  -ffpe-trap=invalid,overflow,denormal,underflow,zero  -Warray-bounds -fcheck=all
 
-LDFLAGS  = $(FFLAGS) -L$(LIBPATH1) -Wl,-rpath,$(LIBPATH1) $(LIBS) #-L$(LIBPATH2)
+LDFLAGS  = $(FFLAGS) -L$(LIBPATH1) -Wl,-rpath,$(LIBPATH1) -L$(LIBPATH2) -Wl,-rpath,$(LIBPATH2) $(LIBS)
 LDDEBUG  = $(DBGFLAGS) -L$(LIBPATH1) $(LIBS) #-L$(LIBPATH2)
 
 MODOBJS = \
