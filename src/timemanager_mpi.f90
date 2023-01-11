@@ -107,6 +107,13 @@ subroutine timemanager(metdata_format)
   real :: xold,yold,zold,xmassfract
   real :: grfraction(3)
   real, parameter :: e_inv = 1.0/exp(1.0)
+  
+
+  real :: totalinitmass=0.0
+  integer :: totalinitparts=0 
+  ! for summing from all processes
+  real :: totalinitmass_tot_mpi=0.0
+  integer :: totalinitparts_tot_mpi=0
 
 ! Measure time spent in timemanager
   if (mp_measure_time) call mpif_mtime('timemanager',0)
@@ -666,7 +673,10 @@ subroutine timemanager(metdata_format)
     avg_h=0.
     avg_air_dens=0.  !erase vector to obtain air density at particle positions: modified by mc
 !--------------------------------------------------------------------------------
-
+    
+    totalinitmass=0.00
+    totalinitparts=0
+    
     do j=1,numpart
 
 ! If integration step is due, do it
@@ -712,6 +722,8 @@ subroutine timemanager(metdata_format)
             call get_vdep_prob(itime,xtra1(j),ytra1(j),ztra1(j),prob_rec)
             if (DRYDEPSPEC(ks)) then        ! dry deposition
                xscav_frac1(j,ks)=prob_rec(ks)
+                totalinitmass=totalinitmass+xscav_frac1(j,ks)
+                totalinitparts=totalinitparts+1
              else
                 xmass1(j,ks)=0.
                 xscav_frac1(j,ks)=0.
@@ -727,6 +739,8 @@ subroutine timemanager(metdata_format)
             if (wetscav.gt.0) then
                 xscav_frac1(j,ks)=wetscav* &
                        (zpoint2(npoint(j))-zpoint1(npoint(j)))*grfraction(1)
+                totalinitmass=totalinitmass+xscav_frac1(j,ks)
+                totalinitparts=totalinitparts+1
             else
                 xmass1(j,ks)=0.
                 xscav_frac1(j,ks)=0.
@@ -850,6 +864,17 @@ subroutine timemanager(metdata_format)
       endif
 
     end do ! j=1, numpart
+    ! to be able to output info for all initialized particles
+    ! we need to collect the information from all processes
+    ! except the reader process (if that is used)
+    if (.not.(lmpreader.and.lmp_use_reader)) then
+        call MPI_Reduce(totalinitmass,totalinitmass_tot_mpi, 1, MPI_REAL, MPI_SUM, id_root,  mp_comm_used, mp_ierr)
+        call MPI_Reduce(totalinitparts,totalinitparts_tot_mpi, 1, MPI_INTEGER, MPI_SUM, id_root,  mp_comm_used, mp_ierr)
+    endif
+    ! The root process is than outputting the file
+    if (lroot) then
+        call writeinitmass(itime, totalinitparts_tot_mpi, totalinitmass_tot_mpi)
+    endif
 
     if(mp_measure_time) call mpif_mtime('partloop1',1)
 

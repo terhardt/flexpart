@@ -141,7 +141,8 @@ OBJECTS_NCF = netcdf_output_mod.o
 OBJECTS = \
 advance.o		initialize.o		\
 writeheader.o		writeheader_txt.o  	\
-partpos_average.o	writeprecip.o \
+partpos_average.o	writeprecip.o\
+writeinitmass.o\
 writeheader_surf.o     	assignland.o\
 part0.o 		gethourlyOH.o\
 caldate.o               partdep.o \
@@ -404,4 +405,5 @@ writeheader_nest_surf.o: com_mod.o outg_mod.o par_mod.o point_mod.o
 writeheader_surf.o: com_mod.o outg_mod.o par_mod.o point_mod.o
 writeheader_txt.o: com_mod.o outg_mod.o par_mod.o point_mod.o
 writeprecip.o: com_mod.o par_mod.o point_mod.o
+writesinitmass.o: com_mod.o par_mod.o point_mod.o
 zenithangle.o: par_mod.o

@@ -276,6 +276,7 @@ integer,parameter :: nxmax=181,nymax=91,nuvzmax=92,nwzmax=92,nzmax=92,nxshift=0 
   integer,parameter :: unitdates=94, unitheader=90,unitheader_txt=100, unitshortpart=95, unitprecip=101
   integer,parameter :: unitboundcond=89
   integer,parameter :: unittmp=101
+  integer,parameter :: unitmass=103
 ! RLT
   integer,parameter :: unitoutfactor=102
 

@@ -104,7 +104,8 @@ subroutine timemanager(metdata_format)
   real :: xold,yold,zold,xmassfract
   real :: grfraction(3)
   real, parameter :: e_inv = 1.0/exp(1.0)
-
+  real :: totalinitmass=0.0
+  integer :: totalinitparts=0 
   !double precision xm(maxspec,maxpointspec_act),
   !    +                 xm_depw(maxspec,maxpointspec_act),
   !    +                 xm_depd(maxspec,maxpointspec_act)
@@ -523,6 +524,9 @@ subroutine timemanager(metdata_format)
     avg_h=0.
     avg_air_dens=0.  !erase vector to obtain air density at particle positions: modified by mc
   !-----------------------------------------------------------------------------
+    totalinitmass=0.0
+    totalinitparts=0 
+    
     do j=1,numpart
 
 
@@ -562,13 +566,15 @@ subroutine timemanager(metdata_format)
   ! Before the particle is moved 
   ! the calculation of the scavenged mass shall only be done once after release
   ! xscav_frac1 was initialised with a negative value
-
+      ! rest total released mass and total released number of particles 
       if  (DRYBKDEP) then
        do ks=1,nspec
          if  ((xscav_frac1(j,ks).lt.0)) then
             call get_vdep_prob(itime,xtra1(j),ytra1(j),ztra1(j),prob_rec)
             if (DRYDEPSPEC(ks)) then        ! dry deposition
                xscav_frac1(j,ks)=prob_rec(ks)
+                totalinitmass=totalinitmass+xscav_frac1(j,ks)
+                totalinitparts=totalinitparts+1
              else
                 xmass1(j,ks)=0.
                 xscav_frac1(j,ks)=0.
@@ -584,6 +590,8 @@ subroutine timemanager(metdata_format)
             if (wetscav.gt.0) then
                 xscav_frac1(j,ks)=wetscav* &
                        (zpoint2(npoint(j))-zpoint1(npoint(j)))*grfraction(1)
+                totalinitmass=totalinitmass+xscav_frac1(j,ks)
+                totalinitparts=totalinitparts+1
             else
                 xmass1(j,ks)=0.
                 xscav_frac1(j,ks)=0.
@@ -705,6 +713,8 @@ subroutine timemanager(metdata_format)
       endif
 
     end do !loop over particles
+
+    call writeinitmass(itime, totalinitparts, totalinitmass)
     
   ! Counter of "unstable" particle velocity during a time scale of
   ! maximumtl=20 minutes (defined in com_mod)
