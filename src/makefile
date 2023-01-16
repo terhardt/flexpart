@@ -50,17 +50,17 @@ FLEXPART-MPI-DBG = DBG_FLEXPART_MPI
 FLEXPART-SERIAL = FLEXPART
 
 ROOT_DIR = /albedo/soft/sw/spack-sw
-GRIB_API = ${ROOT_DIR}/eccodes/2.25.0-e3frvr6/
+GRIB_API = ${ROOT_DIR}/eccodes/2.25.0-e3frvr6
 NETCDF = ${ROOT_DIR}/netcdf-fortran/4.5.4-yb7woqz
 
 F90	  = ${ROOT_DIR}/gcc/12.1.0-aosheo5/bin/gfortran 
 MPIF90    = ${ROOT_DIR}/openmpi/4.1.3-sikgzla/bin/mpif90
 
 INCPATH1  = ${GRIB_API}/include
-LIBPATH1 = ${GRIB_API}/lib
+LIBPATH1 = ${GRIB_API}/lib64
 
-LIBPATH2 = ${NETCDF}/lib
-INCPATH2 = ${NETCDF}/include
+LIBPATH2 = ${NETCDF}/lib/
+INCPATH2 = ${NETCDF}/include/
 
 
 ### Enable netCDF output?
