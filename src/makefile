@@ -49,12 +49,12 @@ FLEXPART-MPI-DBG = DBG_FLEXPART_MPI
 # Serial processing executable
 FLEXPART-SERIAL = FLEXPART
 
-ROOT_DIR = /albedo/soft/modules
-GRIB_API = ${ROOT_DIR}/libs/eccodes/2.25.0-gcc12.1.0
-NETCDF = ${ROOT_DIR}/libs/netcdf-fortran/4.5.4-openmpi4.1.3-gcc12.1.0
+ROOT_DIR = /albedo/soft/sw/spack-sw
+GRIB_API = ${ROOT_DIR}/eccodes/2.25.0-e3frvr6/
+NETCDF = ${ROOT_DIR}/netcdf-fortran/4.5.4-yb7woqz
 
-F90	  = /albedo/soft/sw/spack-sw/gcc/12.1.0-aosheo5/bin/gfortran 
-MPIF90    = /albedo/soft/sw/spack-sw/openmpi/4.1.3-sikgzla/bin/mpif90
+F90	  = ${ROOT_DIR}/gcc/12.1.0-aosheo5/bin/gfortran 
+MPIF90    = ${ROOT_DIR}/openmpi/4.1.3-sikgzla/bin/mpif90
 
 INCPATH1  = ${GRIB_API}/include
 LIBPATH1 = ${GRIB_API}/lib
