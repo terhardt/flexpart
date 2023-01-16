@@ -93,7 +93,8 @@ subroutine timemanager(metdata_format)
   integer :: j,ks,kp,l,n,itime=0,nstop,nstop1
 ! integer :: ksp
   integer :: loutnext,loutstart,loutend
-  integer :: ix,jy,ldeltat,itage,nage,idummy
+  integer :: ix,jy,ldeltat,itage,nage
+  integer(selected_int_kind(16)), dimension(nspec) :: idummy
   integer :: i_nan=0,ii_nan,total_nan_intl=0  !added by mc to check instability in CBL scheme 
   real :: outnum,weight,prob_rec(maxspec),prob(maxspec),decfact,wetscav
   ! real :: uap(maxpart),ucp(maxpart),uzp(maxpart)

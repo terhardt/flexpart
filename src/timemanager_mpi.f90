@@ -96,7 +96,8 @@ subroutine timemanager(metdata_format)
 ! integer :: ksp
   integer :: ip,irec
   integer :: loutnext,loutstart,loutend
-  integer :: ix,jy,ldeltat,itage,nage,idummy
+  integer :: ix,jy,ldeltat,itage,nage
+  integer(selected_int_kind(16)), dimension(nspec) :: idummy
   integer :: i_nan=0,ii_nan,total_nan_intl=0  !added by mc to check instability in CBL scheme 
   integer :: numpart_tot_mpi ! for summing particles on all processes
   real :: outnum,weight,prob(maxspec), prob_rec(maxspec), decfact,wetscav
