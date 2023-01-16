@@ -34,6 +34,17 @@ SHELL = /bin/bash
 #    To add support for output in netCDF format, append `ncf=yes` to the
 #    `make` command
 # 
+#  COMPILATION ON ALBEDO
+#  
+#  These modules need to be loaded before compilation
+#  module load gcc/12.1.0
+#  module load openmpi/4.1.3
+#
+#  Note that the compilers will produce a whole range of errors if no nested input 
+#  files are used
+#
+#
+#
 ################################################################################
 
 ## PROGRAMS
@@ -56,11 +67,11 @@ NETCDF = ${ROOT_DIR}/netcdf-fortran/4.5.4-yb7woqz
 F90	  = ${ROOT_DIR}/gcc/12.1.0-aosheo5/bin/gfortran 
 MPIF90    = ${ROOT_DIR}/openmpi/4.1.3-sikgzla/bin/mpif90
 
-INCPATH1  = ${GRIB_API}/include
-LIBPATH1 = ${GRIB_API}/lib64
+GRIB_INC  = ${GRIB_API}/include
+GRIB_LIB = ${GRIB_API}/lib64
 
-LIBPATH2 = ${NETCDF}/lib/
-INCPATH2 = ${NETCDF}/include/
+NCF_INC = ${NETCDF}/include/
+NCF_LIB = ${NETCDF}/lib/
 
 
 ### Enable netCDF output?
@@ -84,12 +95,12 @@ O_LEV_DBG = g # [0,g]
 # LIBS = -lgrib_api_f90 -lgrib_api -lm -ljasper $(NCOPT) 
 LIBS = -leccodes_f90 -leccodes -lm -ljasper $(NCOPT)
 
-FFLAGS   = -I$(INCPATH1) -I$(INCPATH2) -O$(O_LEV) -cpp -m64 -mcmodel=medium -fconvert=little-endian -frecord-marker=4 -fmessage-length=0 -flto=jobserver -O$(O_LEV) $(NCOPT) $(FUSER) # -g -Warray-bounds -fcheck=all -fbacktrace # -march=native
+FFLAGS   = -I$(GRIB_INC) -I$(NCF_INC) -O$(O_LEV) -cpp -m64 -mcmodel=medium -fconvert=little-endian -frecord-marker=4 -fmessage-length=0 -flto=auto -O$(O_LEV) $(NCOPT) $(FUSER) # -g -Warray-bounds -fcheck=all -fbacktrace # -march=native
 
-DBGFLAGS = -I$(INCPATH1) -I$(INCPATH2) -O$(O_LEV_DBG) -g3 -ggdb3 -cpp -m64 -mcmodel=medium -fconvert=little-endian -frecord-marker=4 -fmessage-length=0 -flto=jobserver -O$(O_LEV_DBG) -fbacktrace   -Wall  -fdump-core $(FUSER)  #  -ffpe-trap=invalid,overflow,denormal,underflow,zero  -Warray-bounds -fcheck=all
+DBGFLAGS = -I$(GRIB_INC) -I$(NCF_INC) -O$(O_LEV_DBG) -g3 -ggdb3 -cpp -m64 -mcmodel=medium -fconvert=little-endian -frecord-marker=4 -fmessage-length=0 -flto=auto -O$(O_LEV_DBG) -fbacktrace   -Wall  -fdump-core $(FUSER)  #  -ffpe-trap=invalid,overflow,denormal,underflow,zero  -Warray-bounds -fcheck=all
 
-LDFLAGS  = $(FFLAGS) -L$(LIBPATH1) -Wl,-rpath,$(LIBPATH1) -L$(LIBPATH2) -Wl,-rpath,$(LIBPATH2) $(LIBS)
-LDDEBUG  = $(DBGFLAGS) -L$(LIBPATH1) $(LIBS) #-L$(LIBPATH2)
+LDFLAGS  = $(FFLAGS) -L$(GRIB_LIB) -Wl,-rpath,$(GRIB_LIB) -L$(NCF_LIB) -Wl,-rpath,$(NCF_LIB) $(LIBS)
+LDDEBUG  = $(DBGFLAGS) -L$(GRIB_LIB) $(LIBS) #-L$(LIBPATH2)
 
 MODOBJS = \
 par_mod.o    		com_mod.o \
